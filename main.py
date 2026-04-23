@@ -13,8 +13,9 @@ client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 realm  = os.environ.get("REALM")
 
 
-def get_llm_response(user_input, conversation_history):
-    conversation_history.append({"role": "user", "content": user_input})
+def get_llm_response(user_input: str|None, conversation_history):
+    if user_input:
+        conversation_history.append({"role": "user", "content": user_input})
     try:
         response = client.chat.completions.create(
             messages=conversation_history, model="gpt-4o-mini", temperature=0.3
@@ -134,19 +135,58 @@ def get_to_know_conversation(session, audio_processor):
 
 
 @inlineCallbacks
+def open_ended_conversation(session, audio_processor, human_information):
+    exit_conditions = (":q", "quit", "exit", "goodbye")
+    human_answer = ""
+    context = [{
+        "role": "developer",
+        "content": f"""
+            You are a friendly robot companion talking to a child with Developmental Language Disorder (DLD).
+            The child has difficulty understanding complex sentences and finding the right words to say.
+
+            A preliminary conversation with the child has already been performed, which yielded the following information: `{human_information}`.
+            
+            The goal of this conversation is to further get the child comfortable and familiar with talking to a robot companion. Your goal is to keep the conversation going on topics that the child is familiar and interested in.
+
+            Follow these STRICT rules:
+            1. (most important) keep sentences extremely short. Maximum 1 to 2 sentences per turn.
+            2. Ask only ONE question at a time; OR let the child ask you questions instead.
+            3. when asking a question, ALWAYS give the child options to choose from (eg. "favorite color is green or blue")
+            4. Whatever the child answers, say their choice was great a great choice (to encourage them to speak)
+
+            To begin with, ask the child a question based on the contextual information provided above.
+        """,
+    }]
+
+    robot_speech, context = get_llm_response(None, context)
+
+    while True:
+        if any(word in human_answer for word in exit_conditions):
+            # wrap up convo
+            return
+        else:
+            # keep talking
+            human_answer = yield say_and_listen(session, audio_processor, robot_speech)
+            print(f"Human said: {human_answer}")
+
+            # get LLM response
+            robot_speech, context = get_llm_response(human_answer, context)
+            print(f"Robot planned response: {robot_speech}")
+
+
+@inlineCallbacks
 def main(session, details):
     yield session.call("rom.optional.behavior.play", name="BlocklyStand")
 
     audio_processor  = yield STT_setup(session)
 
     human_information = yield get_to_know_conversation(session, audio_processor)
-
     print(human_information)
 
-
-
+    yield open_ended_conversation(session, audio_processor, human_information)
 
     # Wrap up
+    yield session.call("rie.dialogue.stt.close")
     yield session.call("rie.dialogue.say_animated", text="Goodbye.")
     yield session.call("rom.optional.behavior.play", name="BlocklyCrouch")
     session.leave()
@@ -160,7 +200,7 @@ wamp = Component(
             "max_retries": 0,
         }
     ],
-    realm="rie.69ea195f26d8af16808252a5",
+    realm=realm,
 )
 
 wamp.on_join(main)
