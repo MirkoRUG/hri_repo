@@ -85,8 +85,20 @@ def main(session, details):
     audio_processor = yield STT_setup(session)
 
     # System prompt to keep responses brief for the draft
-    context = [{"role": "developer", "content": "You are a social robot being used in the context of speech and language therapy to help children with developmental language disorder. The interaction will consist of a getting-to-know-you conversation with a new patient. "}]
-    robot_speech = "I'm ready to listen now. say something."
+    context = [{"role": "developer",
+                "content": """"
+                You are a friendly robot companion talking to a child with Developmental Language Disorder (DLD).
+                The child has difficulty understanding complex sentences and finding the right words to say.
+
+                Follow these STRICT rules:
+                1. (most important) keep sentences extremely short. Maximum 1 to 2 sentences per turn.
+                2. Ask only ONE question at a time
+                3. ALWAYS give the child options to choose from, the fewer the better
+                4. Whatever the child answers, say their choice was great a great choice (to encourage them to speak)
+
+                Your main goal is to get to know the child. Ask questions like: “what is your favorite color”, “what is your name”, or “what is your favorite game”
+                """}]
+    robot_speech = "I'm ready to listen now. Say something."
 
     # conversational loop
     for _ in range(3):
@@ -115,7 +127,7 @@ wamp = Component(
             "max_retries": 0,
         }
     ],
-    realm=realm,
+    realm="rie.69e880102c3865c6a75381db",
 )
 
 wamp.on_join(main)
