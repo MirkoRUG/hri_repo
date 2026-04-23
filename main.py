@@ -80,6 +80,19 @@ def say_and_listen(session, audio_processor, question_text):
     return word_array[-1][0] if word_array else ""
 
 @inlineCallbacks
+def listen(session, audio_processor):
+    audio_processor.do_speech = True
+    print("Listening...")
+    while not audio_processor.new_words:
+        yield sleep(0.5)
+        audio_processor.loop()
+    # Return the last sentence heard, and turn off listening
+    word_array = audio_processor.give_me_words()
+    audio_processor.do_speech = False
+    print("Stopped listening")
+    return word_array[-1][0] if word_array else ""
+
+@inlineCallbacks
 def get_to_know_conversation(session, audio_processor):
     context = [{"role": "developer",
                 "content": """"
@@ -98,14 +111,18 @@ def get_to_know_conversation(session, audio_processor):
     robot_speech = "Hey there! My name is alpharobot. Can you tell me your name?"
     context.append({"role": "assistant", "content": robot_speech})
 
-    for _ in range(3):
+    for _ in range(2):
         # listen to what human says
         human_answer = yield say_and_listen(session, audio_processor, robot_speech)
         print(f"Human said: {human_answer}")
         # get LLM response
         robot_speech, context = get_llm_response(human_answer, context)
         print(f"Robot planned response: {robot_speech}")
+
     yield session.call("rie.dialogue.say_animated", text=robot_speech)
+    human_answer = yield listen(session, audio_processor)
+    print(f"Human said: {human_answer}")
+    context.append({"role": "user", "content": human_answer})
 
     context.append({"role": "developer",
                     "content": "Now that we know more about the user, tell me in a very compressed manner all the information about the user. The goal is to give this context to another agent to know the preferences to the user"})
@@ -115,8 +132,6 @@ def get_to_know_conversation(session, audio_processor):
     answer = response.choices[0].message.content
     return answer
 
-@inlineCallbacks
-def second_round
 
 @inlineCallbacks
 def main(session, details):
