@@ -1,5 +1,6 @@
 import os
 
+from alpha_mini_rug import perform_movement
 from alpha_mini_rug.speech_to_text import SpeechToText
 from autobahn.twisted.component import Component, run
 from autobahn.twisted.util import sleep
@@ -9,6 +10,7 @@ from twisted.internet.defer import inlineCallbacks
 
 load_dotenv()
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+realm  = os.environ.get("REALM")
 
 
 def get_llm_response(user_input, conversation_history):
@@ -61,11 +63,14 @@ def say_and_listen(session, audio_processor, question_text):
     audio_processor.do_speech_recognition = False
     # Ask the question
     yield session.call("rie.dialogue.say_animated", text=question_text)
+
+    perform_movement(session, frames=[{"time": 400, "data": {"body.head.roll": -0.174}}], force=True)
     # List to reply (waiting)
     audio_processor.do_speech_recognition = True
     while not audio_processor.new_words:
         yield sleep(0.5)
         audio_processor.loop()
+    perform_movement(session, frames=[{"time": 400, "data": {"body.head.roll": 0}}], force=True)
 
     # Return the last sentence heard, and turn off listening
     word_array = audio_processor.give_me_words()
@@ -80,8 +85,8 @@ def main(session, details):
     audio_processor = yield STT_setup(session)
 
     # System prompt to keep responses brief for the draft
-    context = [{"role": "system", "content": "Keep answers to 1 short sentence."}]
-    robot_speech = "I'm ready to listen now. Say something."
+    context = [{"role": "developer", "content": "You are a social robot being used in the context of speech and language therapy to help children with developmental language disorder. The interaction will consist of a getting-to-know-you conversation with a new patient. "}]
+    robot_speech = "I'm ready to listen now. say something."
 
     # conversational loop
     for _ in range(3):
@@ -110,7 +115,7 @@ wamp = Component(
             "max_retries": 0,
         }
     ],
-    realm="rie.69e60d652c3865c6a75376a9",
+    realm=realm,
 )
 
 wamp.on_join(main)
