@@ -35,7 +35,7 @@ def STT_setup(session):
     # Setup
     audio_processor = SpeechToText()
     audio_processor.silence_time = 1
-    audio_processor.silence_threshold2 = 100
+    audio_processor.silence_threshold2 = 200
     audio_processor.logging = False
 
     info = yield session.call("rom.sensor.hearing.info")
@@ -60,13 +60,14 @@ def say_and_listen(session, audio_processor, question_text):
     Turn ears OFF -> Speak -> Turn ears ON -> Wait for reply -> Turns ears OFF
     """
     # don't listen
-    audio_processor.do_speech_recognition = False
+    audio_processor.do_speech = False
     # Ask the question
     yield session.call("rie.dialogue.say_animated", text=question_text)
 
     perform_movement(session, frames=[{"time": 400, "data": {"body.head.roll": -0.174}}], force=True)
     # List to reply (waiting)
-    audio_processor.do_speech_recognition = True
+    audio_processor.do_speech = True
+    print("Listening...")
     while not audio_processor.new_words:
         yield sleep(0.5)
         audio_processor.loop()
@@ -74,17 +75,12 @@ def say_and_listen(session, audio_processor, question_text):
 
     # Return the last sentence heard, and turn off listening
     word_array = audio_processor.give_me_words()
-    audio_processor.do_speech_recognition = False
+    audio_processor.do_speech = False
+    print("Stopped listening")
     return word_array[-1][0] if word_array else ""
 
-
 @inlineCallbacks
-def main(session, details):
-    yield session.call("rom.optional.behavior.play", name="BlocklyStand")
-
-    audio_processor = yield STT_setup(session)
-
-    # System prompt to keep responses brief for the draft
+def get_to_know_conversation(session, audio_processor):
     context = [{"role": "developer",
                 "content": """"
                 You are a friendly robot companion talking to a child with Developmental Language Disorder (DLD).
@@ -93,28 +89,50 @@ def main(session, details):
                 Follow these STRICT rules:
                 1. (most important) keep sentences extremely short. Maximum 1 to 2 sentences per turn.
                 2. Ask only ONE question at a time
-                3. ALWAYS give the child options to choose from, the fewer the better
+                3. ALWAYS give the child options to choose from (eg. "favorite color is green or blue")
                 4. Whatever the child answers, say their choice was great a great choice (to encourage them to speak)
 
-                Your main goal is to get to know the child. Ask questions like: “what is your favorite color”, “what is your name”, or “what is your favorite game”
+                Your main goal for now is to get to know the child. Ask questions like: “what is your favorite color”, "how old are you”, or “what is your favorite game”
                 """}]
-    robot_speech = "I'm ready to listen now. Say something."
 
-    # conversational loop
+    robot_speech = "Hey there! My name is alpharobot. Can you tell me your name?"
+    context.append({"role": "assistant", "content": robot_speech})
+
     for _ in range(3):
+        # listen to what human says
         human_answer = yield say_and_listen(session, audio_processor, robot_speech)
         print(f"Human said: {human_answer}")
-
-        # Prevent empty calls to OpenAI
-        if not human_answer:
-            robot_speech = "I didn't quite hear you."
-            continue
-
+        # get LLM response
         robot_speech, context = get_llm_response(human_answer, context)
         print(f"Robot planned response: {robot_speech}")
+    yield session.call("rie.dialogue.say_animated", text=robot_speech)
+
+    context.append({"role": "developer",
+                    "content": "Now that we know more about the user, tell me in a very compressed manner all the information about the user. The goal is to give this context to another agent to know the preferences to the user"})
+    response = client.chat.completions.create(
+        messages=context, model="gpt-4o-mini", temperature=0.3
+    )
+    answer = response.choices[0].message.content
+    return answer
+
+@inlineCallbacks
+def second_round
+
+@inlineCallbacks
+def main(session, details):
+    yield session.call("rom.optional.behavior.play", name="BlocklyStand")
+
+    audio_processor  = yield STT_setup(session)
+
+    human_information = yield get_to_know_conversation(session, audio_processor)
+
+    print(human_information)
+
+
+
 
     # Wrap up
-    yield session.call("rie.dialogue.say_animated", text=robot_speech + ". Goodbye.")
+    yield session.call("rie.dialogue.say_animated", text="Goodbye.")
     yield session.call("rom.optional.behavior.play", name="BlocklyCrouch")
     session.leave()
 
@@ -127,7 +145,7 @@ wamp = Component(
             "max_retries": 0,
         }
     ],
-    realm="rie.69e880102c3865c6a75381db",
+    realm="rie.69ea195f26d8af16808252a5",
 )
 
 wamp.on_join(main)
