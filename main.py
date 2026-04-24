@@ -159,7 +159,7 @@ def get_to_know_conversation(session, audio_processor):
     context.append({"role": "developer",
                     "content": "Now that we know more about the user, tell me in a very compressed manner all the information about the user. The goal is to give this context to another agent to know the preferences of the user"})
     response = client.chat.completions.create(
-        messages=context, model="gpt-4o-mini", temperature=0.3
+        messages=context, model=model, temperature=0.3
     )
     answer = response.choices[0].message.content
     return answer
