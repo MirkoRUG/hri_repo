@@ -112,7 +112,9 @@ def say_and_listen(session, audio_processor, question_text: str):
     # Ask the question
     yield session.call("rie.dialogue.say_animated", text=question_text)
 
-    return listen(session, audio_processor)
+    # return listen(session, audio_processor)
+    response = yield listen(session, audio_processor)
+    return response
 
 
 @inlineCallbacks
@@ -141,6 +143,8 @@ def get_to_know_conversation(session, audio_processor):
                 """}]
 
     robot_speech = "Hey there! My name is alpharobot. Can you tell me your name?"
+    print(f"Robot first question: {robot_speech}")
+    
     context.append({"role": "assistant", "content": robot_speech})
 
     for _ in range(3):
@@ -182,7 +186,7 @@ def open_ended_conversation(session, audio_processor, human_information):
             You are a friendly robot companion talking to a child with Developmental Language Disorder (DLD).
             The child has difficulty understanding complex sentences and finding the right words to say.
 
-            A preliminary conversation with the child has already been performed, which yielded the following information: `{human_information}`.
+            A preliminary conversation with the child has already been performed, which yielded the following information: `{human_information}`. Do not ask questions whose answers can already be found in the provided summary information.
             
             The goal of this conversation is to further get the child comfortable and familiar with talking to a robot companion. Your goal is to keep the conversation going on topics that the child is familiar and interested in.
 
@@ -198,7 +202,8 @@ def open_ended_conversation(session, audio_processor, human_information):
 
     human_answer = ""
     robot_speech, context = get_llm_response(None, context)
-
+    print(f"Robot first question: {robot_speech}")
+    
     while True:
         if any(word in human_answer for word in exit_conditions):
             # wrap up conversation
