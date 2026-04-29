@@ -179,7 +179,7 @@ def open_ended_conversation(session, audio_processor, human_information):
     :param audio_processor: SpeechToText instance connected to the robot
     :param str human_information: compressed summary of information about the child in natural language, provided by a speech therapist, caregiver, or a previous conversation with the robot
     """
-    exit_conditions = ("quit", "exit", "goodbye")
+    exit_conditions = ("quit", "exit", "goodbye", "bye-bye", "bye", "cya", "talk to you later")
     context = [{
         "role": "developer",
         "content": f"""
