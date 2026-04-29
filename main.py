@@ -51,7 +51,7 @@ def STT_setup(session):
     """
     # Setup
     audio_processor = SpeechToText()
-    audio_processor.silence_time = 1
+    audio_processor.silence_time = 2
     audio_processor.silence_threshold2 = 200
     audio_processor.logging = False
 
@@ -137,7 +137,7 @@ def get_to_know_conversation(session, audio_processor):
                 1. (most important) keep sentences extremely short. Maximum 1 to 2 sentences per turn.
                 2. Ask only ONE question at a time
                 3. ALWAYS give the child options to choose from (eg. "favorite color is green or blue").
-                4. Whatever the child answers, say their choice was great a great choice (to encourage them to speak)
+                4. Whatever the child answers, say their choice was great a great choice (to encourage them to speak;DO NOT CONGRATULATE THEM ON THEIR NAME (The first question))
 
                 Your main goal for now is to get to know the child.
                 """}]
@@ -186,18 +186,18 @@ def open_ended_conversation(session, audio_processor, human_information):
             You are a friendly robot companion talking to a child with Developmental Language Disorder (DLD).
             The child has difficulty understanding complex sentences and finding the right words to say.
 
-            A preliminary conversation with the child has already been performed, which yielded the following information: `{human_information}`. Do not ask questions whose answers can already be found in the provided summary information.
+            A preliminary conversation with the child has already been performed, which yielded the following information: `{human_information}`.
             
             The goal of this conversation is to further get the child comfortable and familiar with talking to a robot companion. Your goal is to keep the conversation going on topics that the child is familiar and interested in.
 
             Follow these STRICT rules:
             1. (most important) keep sentences extremely short. Maximum 1 to 2 sentences per turn.
-            2. Ask only ONE question at a time; OR let the child ask you questions instead.
+            2. Ask only ONE question at a time; OR let the child ask you questions instead. When asking a question, do not generate questions for which the answers are already known (e.g. if the information includes "prefers yellow" do not ask "what is your favouite colour")
             3. when asking a question, ALWAYS give the child options to choose from (eg. "favorite color is green or blue")
             4. Whatever the child answers, say their choice was great a great choice (to encourage them to speak)
 
-            To begin with, ask the child a question based on the contextual information provided above.
-        """,
+            To begin with, ask the child a question based on the contextual information provided above. DO not immediately greet the child by name, as this conversation is part of a larger, ongoing one (you have already been introduced).
+            """,
     }]
 
     human_answer = ""
