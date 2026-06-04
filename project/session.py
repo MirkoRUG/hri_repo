@@ -22,7 +22,6 @@ class SessionWrapper:
     model: str
     human_name: str
     human_context: str
-    context: str
     session: Session
     language_level: int = 1
     current_emotion: str | None
@@ -99,7 +98,7 @@ class SessionWrapper:
         """Update the child's profile using the latest conversation."""
 
         prompt = f"""
-        Current child profile: {self.context}
+        Current child profile: {self.human_context}
         Conversation history: {self.conversation_history}
 
         Update the profile with new information. 
@@ -126,7 +125,7 @@ class SessionWrapper:
             temperature=0
             )
 
-        self.context = response.choices[0].message.content or ""
+        self.human_context = response.choices[0].message.content or ""
 
     @inlineCallbacks
     def setup_STT(self):
