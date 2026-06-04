@@ -21,16 +21,21 @@ class SessionWrapper:
     conversation_history: List = []
     client: OpenAI
     model: str
+    human_name: str
     human_context: str
+    context: str
     session: Session
+    language_level: int = 1
     current_emotion: str | None
     _frame_counter: int
 
     def __init__(self, session, name: str):
         self.session = session
+        self.language_level = 1
         self.current_emotion = None
         self._frame_counter = 0
         self._body = Body()
+        self.human_name = name
         self.load_personalization_data(name)
 
         self.client = settings.client
@@ -50,17 +55,80 @@ class SessionWrapper:
         yield self.session.call("rom.optional.behavior.play", name="BlocklyCrouch")
         self.session.leave()
 
-    def load_personalization_data(self, name: str):
+    def load_personalization_data(self):
         """Loads details on personalization from file, indexed by filename.
 
-        Assumes the files are stored in the relative folder './data' and in the format '<name>.md'.
-
-        :param name: filename to load data from
+        Assumes the files are stored in the relative folder './data' and in the format '<name>.md'. 
         """
-        logging.debug(f"loading personalization info for {name}")
-        with open(f"data/{name}.md") as f:
+        with open(f"data/{self.human_name}.md", "r") as f:
             self.human_context = f.read()
+            
+    def count_child_words(self) -> int:
+        """Count all words spoken by the child so far."""
 
+        total = 0
+
+        for message in self.conversation_history:
+            if message["role"] == "user":
+                total += len(message["content"].split())
+
+        return total
+    
+    def determine_language_level(self):
+        """Calculate the child's level based on the word count in the initial conversation."""
+        words = self.count_child_words()
+
+        if words < 5: 
+            self.language_level = 1
+        elif words < 15:
+            self.language_level = 2
+        elif words < 30:
+            self.language_level = 3
+        else:
+            self.language_level = 4
+
+        logging.info(
+            f"Child spoke {words} words. "
+            f"Assigned level {self.language_level}"
+        )
+        
+    def save_personalization_data(self):
+        """Save the current child profile."""
+        with open(f"data/{self.human_name}.md", "w") as f:
+            f.write(self.context)
+            
+    def update_child_profile(self):
+        """Update the child's profile using the latest conversation."""
+
+        prompt = f"""
+        Current child profile: {self.context}
+        Conversation history: {self.conversation_history}
+
+        Update the profile with new information. 
+        
+        Rules:
+        - Keep previously known information.
+        - Add new information learned from the conversation.
+        - Remove duplicated information.
+        - Keep the profile concise.
+        - Mention interests, hobbies, favourite things, recent activities,
+        family members, pets, personality traits or anything else useful
+        for future conversations.
+        - Include the current language level: {self.language_level}.
+
+        Output only the updated profile.
+        """
+
+        response = self.client.chat.completions.create(
+            messages=[{
+                "role": "developer",
+                "content": prompt
+            }],
+            model=self.model,
+            temperature=0
+            )
+
+        self.context = response.choices[0].message.content or ""
 
     @inlineCallbacks
     def setup_STT(self):
@@ -217,4 +285,3 @@ class SessionWrapper:
         yield self.say(text)
         response = yield self.listen()
         return response
-

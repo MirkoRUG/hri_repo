@@ -1,0 +1,42 @@
+from session import SessionWrapper
+from twisted.internet.defer import inlineCallbacks
+
+# probably change
+from .twenty_questions import run as questions_game
+from .describe_images import run as describe_game
+from .description import run as description_game
+from .storytelling import run as storytelling_game
+
+@inlineCallbacks
+def run_games(s: SessionWrapper):
+    yield s.session.call(
+        "rie.dialogue.say_animated",
+        text="Great! Now let's play a language game together."
+    )
+
+    if s.language_level == 1:
+        yield s.session.call(
+            "rie.dialogue.say_animated",
+            text="level 1 let's go"
+        )
+        # yield describe_game(s)
+
+    elif s.language_level == 2:
+        yield s.session.call(
+            "rie.dialogue.say_animated",
+            text="level 2 let's go"
+        )
+        # yield questions_game(s)
+
+    elif s.language_level == 3:
+        yield s.session.call(
+            "rie.dialogue.say_animated",
+            text="level 3 let's go"
+        )
+        # yield description_game(s)
+
+    else:
+        yield s.session.call(
+            "rie.dialogue.say_animated",
+            text="level 4 let's go"
+        )

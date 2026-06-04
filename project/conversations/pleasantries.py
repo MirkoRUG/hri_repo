@@ -14,12 +14,20 @@ def pleasantries(s: SessionWrapper):
     :return how cooperative the LLM estimates the child is for learning [1-5], and a short elaboration.
     :rtype tuple[int, str[
     """
+    context_section = ""
+
+    if s.human_context.strip():
+        context_section = f"""
+        The following is contextual information for the child:
+        {s.human_context}
+        """
+    
     s.conversation_history.append({"role": "developer", 
                 "content": f"""
                 You are a friendly robot companion talking to a child with Developmental Language Disorder (DLD).
                 The child has difficulty understanding complex sentences and finding the right words to say.
 
-                The following is contextual information for the child you are interacting with: {s.human_context}
+                {context_section}
                 The child may be more or less expressive, as indicated by the context; adjust accordingly.
 
                 The goal of this conversation is to get the child comfortable talking to the robot. To this end, do the following:
@@ -37,7 +45,7 @@ def pleasantries(s: SessionWrapper):
     
     s.conversation_history.append({"role": "assistant", "content": robot_speech})
 
-    for _ in range(2):
+    for _ in range(5):
         human_answer = yield input("Enter human response: ") if settings.debug else s.say_and_listen(robot_speech)
         robot_speech = s.get_llm_response(human_answer)
         logging.info(f"Robot speech: {robot_speech}")
@@ -65,6 +73,15 @@ def pleasantries(s: SessionWrapper):
 
     answer = response.choices[0].message.content or ""
     s.conversation_history.append({"role": "assistant", "content": answer})
+    
+    s.determine_language_level()
+    logging.info(
+        f"Assigned language level: {s.language_level}"
+    )
+    
+    s.update_child_profile()
+    s.save_personalization_data()   
+
     try: 
         num, rsn = answer.split(';')
         return (int(num), rsn)

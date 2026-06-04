@@ -8,6 +8,7 @@ from twisted.internet.defer import inlineCallbacks
 
 from conversations import *
 from session import SessionWrapper
+from games.games import run_games
 
 
 load_dotenv()
@@ -30,7 +31,7 @@ def main(session, details):
     # conversational flow
     num, rsn = yield pleasantries(manager)
     logging.info(f"readiness estimate: {num}, {rsn}") 
-    # TODO: run games
+    yield run_games(manager)
     yield wrapup(manager)
 
     yield manager.shut_down()
