@@ -41,14 +41,12 @@ def pleasantries(s: SessionWrapper):
     s.conversation_history.append({"role": "assistant", "content": robot_speech})
 
     for _ in range(3):
-        # human_answer = yield s.say_and_listen(robot_speech)
-        human_answer = input("Enter human response:")
+        human_answer = yield s.say_and_listen(robot_speech)
         robot_speech = s.get_llm_response(human_answer)
         logging.info(f"Robot speech: {robot_speech}")
 
-    # yield s.session.call("rie.dialogue.say_animated", text=robot_speech)
-    human_answer = input("Enter human response: ")
-    # human_answer = yield s.listen()
+    yield s.session.call("rie.dialogue.say_animated", text=robot_speech)
+    human_answer = yield s.listen()
     s.conversation_history.append({"role": "user", "content": human_answer})
 
     # FIXME (medium priority) the llm will keep asking questions making the exit of the conversation quite sudden; add a small closer saying we're moving onto the exercises now.

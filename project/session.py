@@ -33,21 +33,12 @@ class SessionWrapper:
     def load_personalization_data(self, name: str):
         """Loads details on personalization from file, indexed by filename.
 
-        Assumes the files are stored in the relative folder './data' and in the format '<name>.md'. If the files does not exist, it creates it.
+        Assumes the files are stored in the relative folder './data' and in the format '<name>.md'. 
 
         :param name: filename to load data from
         """
-        path = f"data/{name}.md"
-
-        if os.path.exists(path):
-            logging.info(f"Loading profile for {name}")
-
-            with open(path, "r") as f:
-                self.human_context = f.read()
-
-        else:
-            self.human_context = ""
-            logging.info(f"New child detected: {name}")
+        with open(f"data/{name}.md", "r") as f:
+            self.human_context = f.read()
             
     def count_child_words(self) -> int:
         """Count all words spoken by the child so far."""
@@ -90,8 +81,8 @@ class SessionWrapper:
         Current child profile: {self.context}
         Conversation history: {self.conversation_history}
 
-        If a profile already exists, update it with new information. If no profile exists, create a new profile from the conversation.
-
+        Update the profile with new information. 
+        
         Rules:
         - Keep previously known information.
         - Add new information learned from the conversation.
