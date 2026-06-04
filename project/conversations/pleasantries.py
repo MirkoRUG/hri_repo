@@ -37,7 +37,7 @@ def pleasantries(s: SessionWrapper):
     
     s.conversation_history.append({"role": "assistant", "content": robot_speech})
 
-    for _ in range(5):
+    for _ in range(2):
         human_answer = yield input("Enter human response: ") if settings.debug else s.say_and_listen(robot_speech)
         robot_speech = s.get_llm_response(human_answer)
         logging.info(f"Robot speech: {robot_speech}")
@@ -69,8 +69,8 @@ def pleasantries(s: SessionWrapper):
     s.conversation_history.append({"role": "assistant", "content": answer})
     try: 
         num, rsn = answer.split(';')
-        return (int(num, rsn))
-    except Exception as e:
+        return (int(num), rsn)
+    except:
         logging.warning("LLM returned unparsable response while returning from pleasantries")
-        logging.info(e.__traceback__)
+        logging.debug(f"answer: {answer}")
         return (-1, "")

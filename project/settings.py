@@ -2,6 +2,7 @@ import logging
 import os
 from openai import OpenAI
 
+# not the best way to do a config, but it works
 def init():
     logging.basicConfig(level=logging.INFO)
 
