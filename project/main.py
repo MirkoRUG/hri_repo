@@ -29,7 +29,7 @@ def main(session, details):
 
     # conversational flow
     num, rsn = yield pleasantries(manager)
-    logging.critical(f"estimate: {num}, {rsn}") 
+    logging.info(f"readiness estimate: {num}, {rsn}") 
     # TODO: run games
     yield wrapup(manager)
 

@@ -3,7 +3,6 @@ import logging
 import settings
 
 
-# TEST: this whole function
 def wrapup(s: SessionWrapper):
     """Final part of the conversation between the robot and a child.
 

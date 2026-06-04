@@ -14,7 +14,7 @@ def pleasantries(s: SessionWrapper):
     :return how cooperative the LLM estimates the child is for learning [1-5], and a short elaboration.
     :rtype tuple[int, str[
     """
-    s.conversation_history.append({"role": "developer", # TODO (medium priority): refine this prompt for the LLM
+    s.conversation_history.append({"role": "developer", 
                 "content": f"""
                 You are a friendly robot companion talking to a child with Developmental Language Disorder (DLD).
                 The child has difficulty understanding complex sentences and finding the right words to say.
@@ -63,8 +63,6 @@ def pleasantries(s: SessionWrapper):
         messages=s.conversation_history, model=s.model, temperature=0.3
     )
 
-    #TEST: untested
-    # FIXME: always crashes on unparsable response; dunno why
     answer = response.choices[0].message.content or ""
     s.conversation_history.append({"role": "assistant", "content": answer})
     try: 
