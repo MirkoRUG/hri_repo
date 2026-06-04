@@ -1,5 +1,8 @@
 import logging
 
+import cv2
+import numpy as np
+from deepface import DeepFace
 from openai import OpenAI
 from twisted.internet.defer import inlineCallbacks
 from alpha_mini_rug.speech_to_text import SpeechToText
@@ -7,7 +10,9 @@ from alpha_mini_rug import perform_movement
 from autobahn.twisted.util import sleep
 from typing import List
 from autobahn.twisted.wamp import Session
-import os
+
+EMOTION_FRAME_SKIP = 30
+import settings
 
 class SessionWrapper:
     """Wrapper for the wamp object. Keeps track of LLM related variables as well."""
@@ -15,29 +20,45 @@ class SessionWrapper:
     conversation_history: List = []
     client: OpenAI
     model: str
+    human_name: str
     human_context: str
     context: str
     session: Session
     language_level: int = 1
+    current_emotion: str | None
+    _frame_counter: int
 
     def __init__(self, session, name: str):
         self.session = session
         self.language_level = 1
-        self.setup_STT()
-        self.load_personalization_data(name)
+        self.current_emotion = None
+        self._frame_counter = 0
+        self.human_name = name
+        self.load_personalization_data()
 
-        self.client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-        self.model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+        self.client = settings.client
+        self.model = settings.model
 
+    @inlineCallbacks
+    def setup(self):
+        if not settings.debug:
+            yield self.session.call("rom.optional.behavior.play", name="BlocklyStand")
+            yield self.setup_STT()
+            yield self.setup_vision()
 
-    def load_personalization_data(self, name: str):
+    @inlineCallbacks
+    def shut_down(self):
+        cv2.destroyAllWindows()
+        yield self.session.call("rom.sensor.sight.close")
+        yield self.session.call("rom.optional.behavior.play", name="BlocklyCrouch")
+        self.session.leave()
+
+    def load_personalization_data(self):
         """Loads details on personalization from file, indexed by filename.
 
         Assumes the files are stored in the relative folder './data' and in the format '<name>.md'. 
-
-        :param name: filename to load data from
         """
-        with open(f"data/{name}.md", "r") as f:
+        with open(f"data/{self.human_name}.md", "r") as f:
             self.human_context = f.read()
             
     def count_child_words(self) -> int:
@@ -69,9 +90,9 @@ class SessionWrapper:
             f"Assigned level {self.language_level}"
         )
         
-    def save_personalization_data(self, name: str):
+    def save_personalization_data(self):
         """Save the current child profile."""
-        with open(f"data/{name}.md", "w") as f:
+        with open(f"data/{self.human_name}.md", "w") as f:
             f.write(self.context)
             
     def update_child_profile(self):
@@ -132,6 +153,36 @@ class SessionWrapper:
         )
         yield self.session.call("rom.sensor.hearing.stream")
 
+    @inlineCallbacks
+    def setup_vision(self):
+        yield self.session.subscribe(self._on_frame, "rom.sensor.sight.stream")
+        yield self.session.call("rom.sensor.sight.stream")
+
+    def _on_frame(self, frame):
+        if frame is None or not isinstance(frame, dict):
+            return
+
+        raw = frame["data"]["body.head.eyes"]
+        nparr = np.frombuffer(raw, np.uint8)
+        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+        self._frame_counter += 1
+        if self._frame_counter % EMOTION_FRAME_SKIP == 0:
+            try:
+                result = DeepFace.analyze(image, actions=["emotion"], enforce_detection=True)
+                dominant = result[0]["dominant_emotion"]
+                confidence = result[0]["emotion"][dominant]
+                threshold = 90 if dominant == "sad" else 40
+                if confidence >= threshold:
+                    self.current_emotion = dominant
+                    logging.info(f"Detected emotion: {self.current_emotion} ({confidence:.1f}%)")
+            except Exception as e:
+                logging.info(f"DeepFace: {e}")
+
+        if self.current_emotion:
+            cv2.putText(image, self.current_emotion, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        cv2.imshow("Camera Stream", image)
+        cv2.waitKey(1)
 
     def get_llm_response(self, user_input: str|None) -> str:
         """Fetches response from the LLM given an optional input and preceeding context.
@@ -176,24 +227,29 @@ class SessionWrapper:
         word_array = self.audio_processor.give_me_words()
         self.audio_processor.do_speech = False
         logging.debug("Stopped listening") 
-        logging.info(f"Human speech: {word_array[-1][0] if word_array else '' }")
+        logging.info(f"Human speech: {word_array[-1][0] if word_array else ''}")
         return word_array[-1][0] if word_array else ""
 
+    @inlineCallbacks
+    def say(self, text: str):
+        """Make the robot say a string.
+
+        Turns off the robot's microphone while speaking to avoid self-hearing.
+
+        :param text: string to say
+        """
+        # don't listen
+        self.audio_processor.do_speech = False
+        # say text
+        yield self.session.call("rie.dialogue.say_animated", text=text)
 
     @inlineCallbacks
-    def say_and_listen(self, question_text: str):
+    def say_and_listen(self, text: str):
         """Make the robot say a string and listen for a human response.
-
-        Turns off the robot's microphone while speaking to avoid self-hearing:
-        Turn ears OFF -> Speak -> Turn ears ON -> Wait for reply -> Turns ears OFF
 
         :return: human response
         :rtype: str
         """
-        # don't listen
-        self.audio_processor.do_speech = False
-        # Ask the question
-        yield self.session.call("rie.dialogue.say_animated", text=question_text)
-
+        yield self.say(text)
         response = yield self.listen()
         return response
