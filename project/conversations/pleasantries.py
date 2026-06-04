@@ -1,5 +1,6 @@
 from session import SessionWrapper
 import logging
+import settings
 from twisted.internet.defer import inlineCallbacks
 
 
@@ -10,6 +11,8 @@ def pleasantries(s: SessionWrapper):
     The robot (through an LLM) will ask a few simple questions, mostly phatic expressions, in order to get the human comfortable and at ease.
 
     :param s: wrapper containing all required context + conversational history
+    :return how cooperative the LLM estimates the child is for learning [1-5], and a short elaboration.
+    :rtype tuple[int, str[
     """
     s.conversation_history.append({"role": "developer", # TODO (medium priority): refine this prompt for the LLM
                 "content": f"""
@@ -34,18 +37,25 @@ def pleasantries(s: SessionWrapper):
     
     s.conversation_history.append({"role": "assistant", "content": robot_speech})
 
-    for _ in range(3):
-        human_answer = yield s.say_and_listen(robot_speech)
-        # human_answer = input("Enter human response:")
+    for _ in range(5):
+        human_answer = yield input("Enter human response: ") if settings.debug else s.say_and_listen(robot_speech)
         robot_speech = s.get_llm_response(human_answer)
         logging.info(f"Robot speech: {robot_speech}")
 
-    yield s.session.call("rie.dialogue.say_animated", text=robot_speech)
-    # human_answer = input("Enter human response: ")
-    # human_answer = yield s.listen()
+    if not settings.debug:
+        yield s.session.call("rie.dialogue.say_animated", text=robot_speech)
+
+    human_answer = yield input("Enter human response: ") if settings.debug else s.listen()
     s.conversation_history.append({"role": "user", "content": human_answer})
 
-    # FIXME (medium priority) the llm will keep asking questions making the exit of the conversation quite sudden; add a small closer saying we're moving onto the exercises now.
+    # Respond to the last answer so the conversation doesn't end abruptly.
+    s.conversation_history.append({"role": "developer", 
+                "content": f"""That's it for the pleasantries. Acknowledge the child's last response and tell them in a friendly, polite way that we're going to be moving on to the learning part of the session now-- by playing a few games! Express this sentiment in at most two sentences. """})
+
+    robot_speech = s.get_llm_response(None)
+
+    if not settings.debug:
+        s.say(robot_speech)
 
     s.conversation_history.append({"role": "developer",
         "content": "Now that we have talked to the user for a bit, tell me in a very compressed manner how the user is feeling. Respond by giving a number on a scale of 1-5 indicating how ready for learning you believe the user to be, followed by a short, single sentence which elaborates on the number. USE THIS FORMAT: [1-5]; <summary>."})
@@ -53,9 +63,14 @@ def pleasantries(s: SessionWrapper):
         messages=s.conversation_history, model=s.model, temperature=0.3
     )
 
-    # FIXME (high priority): this function crashes the program for some reason (i suspect im using inlinecallbacks wrong)
-
-    # would love to actually return the answer here but wamp does not twisted does not like that on inlinecallbacks. 
-    # adding it to conversation history for now; probably should set variables on the Session object in the final iteration.
+    #TEST: untested
+    # FIXME: always crashes on unparsable response; dunno why
     answer = response.choices[0].message.content or ""
     s.conversation_history.append({"role": "assistant", "content": answer})
+    try: 
+        num, rsn = answer.split(';')
+        return (int(num, rsn))
+    except Exception as e:
+        logging.warning("LLM returned unparsable response while returning from pleasantries")
+        logging.info(e.__traceback__)
+        return (-1, "")

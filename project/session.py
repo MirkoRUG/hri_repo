@@ -10,10 +10,9 @@ from alpha_mini_rug import perform_movement
 from autobahn.twisted.util import sleep
 from typing import List
 from autobahn.twisted.wamp import Session
-import os
 
 EMOTION_FRAME_SKIP = 30
-
+import settings
 
 class SessionWrapper:
     """Wrapper for the wamp object. Keeps track of LLM related variables as well."""
@@ -32,13 +31,14 @@ class SessionWrapper:
         self._frame_counter = 0
         self.load_personalization_data(name)
 
-        self.client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-        self.model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+        self.client = settings.client
+        self.model = settings.model
 
     @inlineCallbacks
     def setup(self):
-        yield self.session.call("rom.optional.behavior.play", name="BlocklyStand")
-        yield self.setup_STT()
+        if not settings.debug:
+            yield self.session.call("rom.optional.behavior.play", name="BlocklyStand")
+            yield self.setup_STT()
         yield self.setup_vision()
 
     @inlineCallbacks
@@ -162,22 +162,27 @@ class SessionWrapper:
         logging.info(f"Human speech: {word_array[-1][0] if word_array else ''}")
         return word_array[-1][0] if word_array else ""
 
+    @inlineCallbacks
+    def say(self, text: str):
+        """Make the robot say a string.
+
+        Turns off the robot's microphone while speaking to avoid self-hearing.
+
+        :param text: string to say
+        """
+        # don't listen
+        self.audio_processor.do_speech = False
+        # say text
+        yield self.session.call("rie.dialogue.say_animated", text=text)
 
     @inlineCallbacks
-    def say_and_listen(self, question_text: str):
+    def say_and_listen(self, text: str):
         """Make the robot say a string and listen for a human response.
-
-        Turns off the robot's microphone while speaking to avoid self-hearing:
-        Turn ears OFF -> Speak -> Turn ears ON -> Wait for reply -> Turns ears OFF
 
         :return: human response
         :rtype: str
         """
-        # don't listen
-        self.audio_processor.do_speech = False
-        # Ask the question
-        yield self.session.call("rie.dialogue.say_animated", text=question_text)
-
+        yield self.say(text)
         response = yield self.listen()
         return response
 

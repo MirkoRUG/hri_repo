@@ -1,5 +1,6 @@
 import os
 import logging
+import settings
 
 from autobahn.twisted.component import Component, run
 from dotenv import load_dotenv
@@ -8,10 +9,9 @@ from twisted.internet.defer import inlineCallbacks
 from conversations import *
 from session import SessionWrapper
 
-load_dotenv()
-logging.basicConfig(level=logging.INFO)
-realm  = os.environ["REALM"]
 
+load_dotenv()
+realm  = os.environ["REALM"]
 
 @inlineCallbacks
 def main(session, details):
@@ -28,7 +28,8 @@ def main(session, details):
     yield manager.setup()
 
     # conversational flow
-    yield pleasantries(manager)
+    num, rsn = yield pleasantries(manager)
+    logging.critical(f"estimate: {num}, {rsn}") 
     # TODO: run games
     yield wrapup(manager)
 
@@ -48,5 +49,10 @@ wamp.on_join(main)
 
 
 if __name__ == "__main__":
-    run([wamp])
+    settings.init()
+
+    if settings.debug:
+        main(None, None)
+    else:
+        run([wamp])
 
