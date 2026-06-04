@@ -39,7 +39,7 @@ class SessionWrapper:
         if not settings.debug:
             yield self.session.call("rom.optional.behavior.play", name="BlocklyStand")
             yield self.setup_STT()
-        yield self.setup_vision()
+            yield self.setup_vision()
 
     @inlineCallbacks
     def shut_down(self):
