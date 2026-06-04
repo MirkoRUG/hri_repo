@@ -1,18 +1,19 @@
 import logging
+from typing import List
 
 import cv2
 import numpy as np
+import settings
+from alpha_mini_rug import perform_movement
+from alpha_mini_rug.speech_to_text import SpeechToText
+from autobahn.twisted.util import sleep
+from autobahn.twisted.wamp import Session
+from body import Body
 from deepface import DeepFace
 from openai import OpenAI
 from twisted.internet.defer import inlineCallbacks
-from alpha_mini_rug.speech_to_text import SpeechToText
-from alpha_mini_rug import perform_movement
-from autobahn.twisted.util import sleep
-from typing import List
-from autobahn.twisted.wamp import Session
 
 EMOTION_FRAME_SKIP = 30
-import settings
 
 class SessionWrapper:
     """Wrapper for the wamp object. Keeps track of LLM related variables as well."""
@@ -29,6 +30,7 @@ class SessionWrapper:
         self.session = session
         self.current_emotion = None
         self._frame_counter = 0
+        self._body = Body()
         self.load_personalization_data(name)
 
         self.client = settings.client
@@ -37,7 +39,7 @@ class SessionWrapper:
     @inlineCallbacks
     def setup(self):
         if not settings.debug:
-            yield self.session.call("rom.optional.behavior.play", name="BlocklyStand")
+            yield self.session.call("rom.optional.behavior.play", name="BlocklySafeStand")
             yield self.setup_STT()
             yield self.setup_vision()
 
@@ -70,14 +72,14 @@ class SessionWrapper:
         # Setup
         self.audio_processor = SpeechToText()
         self.audio_processor.silence_time = 2
-        self.audio_processor.silence_threshold2 = 200
+        self.audio_processor.silence_threshold2 = 1000
         self.audio_processor.logging = False
 
         info = yield self.session.call("rom.sensor.hearing.info")
         logging.debug("Hearing Info:", info)
 
         yield self.session.call("rom.sensor.hearing.sensitivity", 1650)
-        yield self.session.call("rie.dialogue.config.language", lang="en")
+        yield self.session.call("rie.dialogue.config.language")
 
         # Subscribe to the audio stream and pass the data to the audio_processor
         yield self.session.subscribe(
@@ -109,7 +111,8 @@ class SessionWrapper:
                     self.current_emotion = dominant
                     logging.info(f"Detected emotion: {self.current_emotion} ({confidence:.1f}%)")
             except Exception as e:
-                logging.info(f"DeepFace: {e}")
+                # logging.debug(f"DeepFace: {e}")
+                pass
 
         if self.current_emotion:
             cv2.putText(image, self.current_emotion, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
@@ -158,22 +161,51 @@ class SessionWrapper:
         # Return the last sentence heard, and turn off listening
         word_array = self.audio_processor.give_me_words()
         self.audio_processor.do_speech = False
-        logging.debug("Stopped listening") 
-        logging.info(f"Human speech: {word_array[-1][0] if word_array else ''}")
-        return word_array[-1][0] if word_array else ""
+        human_response = word_array[-1][0] if word_array else ""
+        logging.debug("Stopped listening")
+        logging.info(f"Human speech: {human_response}")
+
+        if "dance" in human_response.lower():
+            yield self.session.call("rom.optional.behavior.play", name="BlocklyThriller")
+            yield sleep(15)
+
+        return human_response
 
     @inlineCallbacks
     def say(self, text: str):
         """Make the robot say a string.
 
         Turns off the robot's microphone while speaking to avoid self-hearing.
+        Picks a set of movements based on trigger words; falls back to say_animated.
 
         :param text: string to say
         """
         # don't listen
         self.audio_processor.do_speech = False
-        # say text
-        yield self.session.call("rie.dialogue.say_animated", text=text)
+
+        s = text.lower()
+        # Select movement to go along with sentence
+        if any(w in s for w in ["win", "victory", "congratulations"]):
+            frames = self._body.victory_movement(s)
+            perform_movement(self.session, frames=frames, force=True)
+            yield self.session.call("rie.dialogue.say", text=text)
+        elif any(w in s for w in ["eat", "food", "fruit", "drink", "beverage"]):
+            frames = self._body.eating_movement(s)
+            perform_movement(self.session, frames=frames, force=True)
+            yield self.session.call("rie.dialogue.say", text=text)
+        elif any(w in s for w in ["yes", "correct", "well done", "great job", "good job"]):
+            frames = self._body.yes_movement()
+            perform_movement(self.session, frames=frames, force=True)
+            yield self.session.call("rie.dialogue.say", text=text)
+        elif any(w in s for w in ["no", "wrong", "incorrect"]):
+            frames = self._body.no_movement()
+            perform_movement(self.session, frames=frames, force=True)
+            yield self.session.call("rie.dialogue.say", text=text)
+        elif any(w in s for w in ["hello", "hi", "hey", "goodbye", "bye", "see you", "farewell"]):
+            self.session.call("rom.optional.behavior.play", name="BlocklyWaveRightArm")
+            yield self.session.call("rie.dialogue.say", text=text)
+        else:
+            yield self.session.call("rie.dialogue.say_animated", text=text)
 
     @inlineCallbacks
     def say_and_listen(self, text: str):

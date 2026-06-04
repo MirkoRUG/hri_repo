@@ -7,7 +7,7 @@ def init():
     logging.basicConfig(level=logging.INFO)
 
     global debug
-    global client 
+    global client
     global model
     debug = os.environ.get('DEBUG', 'False').lower() == 'true'
     client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
