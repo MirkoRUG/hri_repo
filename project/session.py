@@ -16,6 +16,7 @@ class SessionWrapper:
     client: OpenAI
     model: str
     human_context: str
+    context: str
     session: Session
     language_level: int = 1
 
@@ -32,13 +33,21 @@ class SessionWrapper:
     def load_personalization_data(self, name: str):
         """Loads details on personalization from file, indexed by filename.
 
-        Assumes the files are stored in the relative folder './data' and in the format '<name>.md'.
+        Assumes the files are stored in the relative folder './data' and in the format '<name>.md'. If the files does not exist, it creates it.
 
         :param name: filename to load data from
         """
-        logging.debug(f"loading personalization info for {name}")
-        with open(f"data/{name}.md") as f:
-            self.human_context = f.read()
+        path = f"data/{name}.md"
+
+        if os.path.exists(path):
+            logging.info(f"Loading profile for {name}")
+
+            with open(path, "r") as f:
+                self.human_context = f.read()
+
+        else:
+            self.human_context = ""
+            logging.info(f"New child detected: {name}")
             
     def count_child_words(self) -> int:
         """Count all words spoken by the child so far."""
@@ -68,6 +77,44 @@ class SessionWrapper:
             f"Child spoke {words} words. "
             f"Assigned level {self.language_level}"
         )
+        
+    def save_personalization_data(self, name: str):
+        """Save the current child profile."""
+        with open(f"data/{name}.md", "w") as f:
+            f.write(self.context)
+            
+    def update_child_profile(self):
+        """Update the child's profile using the latest conversation."""
+
+        prompt = f"""
+        Current child profile: {self.context}
+        Conversation history: {self.conversation_history}
+
+        If a profile already exists, update it with new information. If no profile exists, create a new profile from the conversation.
+
+        Rules:
+        - Keep previously known information.
+        - Add new information learned from the conversation.
+        - Remove duplicated information.
+        - Keep the profile concise.
+        - Mention interests, hobbies, favourite things, recent activities,
+        family members, pets, personality traits or anything else useful
+        for future conversations.
+        - Include the current language level: {self.language_level}.
+
+        Output only the updated profile.
+        """
+
+        response = self.client.chat.completions.create(
+            messages=[{
+                "role": "developer",
+                "content": prompt
+            }],
+            model=self.model,
+            temperature=0
+            )
+
+        self.context = response.choices[0].message.content or ""
 
     @inlineCallbacks
     def setup_STT(self):
@@ -159,4 +206,3 @@ class SessionWrapper:
 
         response = yield self.listen()
         return response
-
