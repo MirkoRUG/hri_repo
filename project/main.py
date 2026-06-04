@@ -51,7 +51,7 @@ wamp.on_join(main)
 if __name__ == "__main__":
     settings.init()
 
-    if settings.debug == True:
+    if settings.debug:
         print("running debug")
         main(None, None)
     else:
