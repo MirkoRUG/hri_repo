@@ -9,7 +9,7 @@ def init():
     logging.getLogger("deepface").setLevel(logging.WARNING) # FIXME (low priority) does not seem to effect logging for deepface
 
     global debug
-    global client 
+    global client
     global model
     debug = os.environ.get('DEBUG', 'False').lower() == 'true'
     client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
