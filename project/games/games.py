@@ -2,10 +2,10 @@ from session import SessionWrapper
 from twisted.internet.defer import inlineCallbacks
 
 # probably change
-# from questions import run as questions_game
-# from describe_images import run as describe_game
-# from description import run as description_game
-# from storytelling import run as storytelling_game
+from .twenty_questions import run as questions_game
+from .describe_images import run as describe_game
+from .description import run as description_game
+from .storytelling import run as storytelling_game
 
 @inlineCallbacks
 def run_games(s: SessionWrapper):
@@ -40,4 +40,3 @@ def run_games(s: SessionWrapper):
             "rie.dialogue.say_animated",
             text="level 4 let's go"
         )
-        # yield storytelling_game(s)
