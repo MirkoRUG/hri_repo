@@ -92,7 +92,7 @@ class SessionWrapper:
     def save_personalization_data(self):
         """Save the current child profile."""
         with open(f"data/{self.human_name}.md", "w") as f:
-            f.write(self.context)
+            f.write(self.human_context)
             
     def update_child_profile(self):
         """Update the child's profile using the latest conversation."""
