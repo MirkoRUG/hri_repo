@@ -22,14 +22,17 @@ def main(session, details):
         2) a number of language learning games; the difficulty and number of games is personalized to each human
         3) wrap-up, consisting of final encouragement and, depending on the age of the human, more/less in-depth reflection on progress.
     """
+
     # setup
     manager = SessionWrapper(session, "alex")
+    yield manager.setup()
 
     # conversational flow
     yield pleasantries(manager)
     # TODO: run games
     yield wrapup(manager)
 
+    yield manager.shut_down()
 
 wamp = Component(
     transports=[

@@ -26,6 +26,8 @@ def pleasantries(s: SessionWrapper):
 
                 Keep in mind that the audio processing attached to the robot is not the best; if the child says something that you determine is nonsensical, ask for clarification instead of immediately accepting a new conversational thread.
                 Additionally, this conversation consists of exactly 5 turns; keep this in mind when planning your responses.
+
+                Do not use emojis. Start by saying somehting along the lines of "hello [name], how nice to see you again. Are you ready to play?"
                 """})
     robot_speech = s.get_llm_response(None)
     logging.info(f"Robot speech: {robot_speech}")
@@ -33,13 +35,13 @@ def pleasantries(s: SessionWrapper):
     s.conversation_history.append({"role": "assistant", "content": robot_speech})
 
     for _ in range(3):
-        # human_answer = yield s.say_and_listen(robot_speech)
-        human_answer = input("Enter human response:")
+        human_answer = yield s.say_and_listen(robot_speech)
+        # human_answer = input("Enter human response:")
         robot_speech = s.get_llm_response(human_answer)
         logging.info(f"Robot speech: {robot_speech}")
 
-    # yield s.session.call("rie.dialogue.say_animated", text=robot_speech)
-    human_answer = input("Enter human response: ")
+    yield s.session.call("rie.dialogue.say_animated", text=robot_speech)
+    # human_answer = input("Enter human response: ")
     # human_answer = yield s.listen()
     s.conversation_history.append({"role": "user", "content": human_answer})
 

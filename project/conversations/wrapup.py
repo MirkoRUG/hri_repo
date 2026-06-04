@@ -1,5 +1,6 @@
 from session import SessionWrapper
 
+
 # TODO (medium priority): add encouragement/praise/reflection on today's session to this function
 def wrapup(s: SessionWrapper):
     yield s.session.call("rie.dialogue.stt.close")

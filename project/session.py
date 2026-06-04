@@ -1,5 +1,8 @@
 import logging
 
+import cv2
+import numpy as np
+from deepface import DeepFace
 from openai import OpenAI
 from twisted.internet.defer import inlineCallbacks
 from alpha_mini_rug.speech_to_text import SpeechToText
@@ -9,6 +12,9 @@ from typing import List
 from autobahn.twisted.wamp import Session
 import os
 
+EMOTION_FRAME_SKIP = 30
+
+
 class SessionWrapper:
     """Wrapper for the wamp object. Keeps track of LLM related variables as well."""
     audio_processor: SpeechToText
@@ -17,15 +23,30 @@ class SessionWrapper:
     model: str
     human_context: str
     session: Session
+    current_emotion: str | None
+    _frame_counter: int
 
     def __init__(self, session, name: str):
         self.session = session
-        self.setup_STT()
+        self.current_emotion = None
+        self._frame_counter = 0
         self.load_personalization_data(name)
 
         self.client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
         self.model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
 
+    @inlineCallbacks
+    def setup(self):
+        yield self.session.call("rom.optional.behavior.play", name="BlocklyStand")
+        yield self.setup_STT()
+        yield self.setup_vision()
+
+    @inlineCallbacks
+    def shut_down(self):
+        cv2.destroyAllWindows()
+        yield self.session.call("rom.sensor.sight.close")
+        yield self.session.call("rom.optional.behavior.play", name="BlocklyCrouch")
+        self.session.leave()
 
     def load_personalization_data(self, name: str):
         """Loads details on personalization from file, indexed by filename.
@@ -64,6 +85,36 @@ class SessionWrapper:
         )
         yield self.session.call("rom.sensor.hearing.stream")
 
+    @inlineCallbacks
+    def setup_vision(self):
+        yield self.session.subscribe(self._on_frame, "rom.sensor.sight.stream")
+        yield self.session.call("rom.sensor.sight.stream")
+
+    def _on_frame(self, frame):
+        if frame is None or not isinstance(frame, dict):
+            return
+
+        raw = frame["data"]["body.head.eyes"]
+        nparr = np.frombuffer(raw, np.uint8)
+        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+        self._frame_counter += 1
+        if self._frame_counter % EMOTION_FRAME_SKIP == 0:
+            try:
+                result = DeepFace.analyze(image, actions=["emotion"], enforce_detection=True)
+                dominant = result[0]["dominant_emotion"]
+                confidence = result[0]["emotion"][dominant]
+                threshold = 90 if dominant == "sad" else 40
+                if confidence >= threshold:
+                    self.current_emotion = dominant
+                    logging.info(f"Detected emotion: {self.current_emotion} ({confidence:.1f}%)")
+            except Exception as e:
+                logging.info(f"DeepFace: {e}")
+
+        if self.current_emotion:
+            cv2.putText(image, self.current_emotion, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        cv2.imshow("Camera Stream", image)
+        cv2.waitKey(1)
 
     def get_llm_response(self, user_input: str|None) -> str:
         """Fetches response from the LLM given an optional input and preceeding context.
@@ -108,7 +159,7 @@ class SessionWrapper:
         word_array = self.audio_processor.give_me_words()
         self.audio_processor.do_speech = False
         logging.debug("Stopped listening") 
-        logging.info(f"Human speech: {word_array[-1][0] if word_array else ""}")
+        logging.info(f"Human speech: {word_array[-1][0] if word_array else ''}")
         return word_array[-1][0] if word_array else ""
 
 
