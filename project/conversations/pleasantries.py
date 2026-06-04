@@ -57,3 +57,8 @@ def pleasantries(s: SessionWrapper):
     # adding it to conversation history for now; probably should set variables on the Session object in the final iteration.
     answer = response.choices[0].message.content or ""
     s.conversation_history.append({"role": "assistant", "content": answer})
+    
+    # s.determine_language_level()
+    # logging.info(
+    #     f"Assigned language level: {s.language_level}"
+    # )

@@ -17,9 +17,11 @@ class SessionWrapper:
     model: str
     human_context: str
     session: Session
+    language_level: int = 1
 
     def __init__(self, session, name: str):
         self.session = session
+        self.language_level = 1
         self.setup_STT()
         self.load_personalization_data(name)
 
@@ -37,7 +39,35 @@ class SessionWrapper:
         logging.debug(f"loading personalization info for {name}")
         with open(f"data/{name}.md") as f:
             self.human_context = f.read()
+            
+    def count_child_words(self) -> int:
+        """Count all words spoken by the child so far."""
 
+        total = 0
+
+        for message in self.conversation_history:
+            if message["role"] == "user":
+                total += len(message["content"].split())
+
+        return total
+    
+    def determine_language_level(self):
+        """Calculate the child's level based on the word count in the initial conversation."""
+        words = self.count_child_words()
+
+        if words < 5: 
+            self.language_level = 1
+        elif words < 15:
+            self.language_level = 2
+        elif words < 30:
+            self.language_level = 3
+        else:
+            self.language_level = 4
+
+        logging.info(
+            f"Child spoke {words} words. "
+            f"Assigned level {self.language_level}"
+        )
 
     @inlineCallbacks
     def setup_STT(self):
