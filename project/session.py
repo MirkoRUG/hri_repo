@@ -185,7 +185,7 @@ class SessionWrapper:
         word_array = self.audio_processor.give_me_words()
         self.audio_processor.do_speech = False
         logging.debug("Stopped listening") 
-        logging.info(f"Human speech: {word_array[-1][0] if word_array else ""}")
+        logging.info(f"Human speech: {word_array[-1][0] if word_array else '' }")
         return word_array[-1][0] if word_array else ""
 
 
