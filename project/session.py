@@ -49,10 +49,11 @@ class SessionWrapper:
 
     @inlineCallbacks
     def shut_down(self):
-        cv2.destroyAllWindows()
-        yield self.session.call("rom.sensor.sight.close")
-        yield self.session.call("rom.optional.behavior.play", name="BlocklyCrouch")
-        self.session.leave()
+        if not settings.debug:
+            cv2.destroyAllWindows()
+            yield self.session.call("rom.sensor.sight.close")
+            yield self.session.call("rom.optional.behavior.play", name="BlocklyCrouch")
+            self.session.leave()
 
     def load_personalization_data(self):
         """Loads details on personalization from file, indexed by filename.
@@ -178,15 +179,36 @@ class SessionWrapper:
                     self.current_emotion = dominant
                     logging.info(f"Detected emotion: {self.current_emotion} ({confidence:.1f}%)")
             except Exception as e:
-                # logging.debug(f"DeepFace: {e}")
-                pass
+                logging.debug(f"DeepFace: {e}")
 
         if self.current_emotion:
             cv2.putText(image, self.current_emotion, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
         cv2.imshow("Camera Stream", image)
         cv2.waitKey(1)
 
-    def get_llm_response(self, user_input: str|None) -> str:
+    def get_custom_llm_response(self, context: List, input: str|None = None):
+        """Fetches response from the LLM given an optional input and custom context.
+
+        Useful for one-off prompts disconnected from the conversational flow.
+
+        :param input: optional prompt from the user
+        :param context: bespoke context for this prompt
+        :return: generated llm response
+        :rtype: str
+        """
+        if input:
+            context.append({"role": "user", "content": input})
+        try:
+            response = self.client.chat.completions.create(
+                messages=self.conversation_history, model=self.model, temperature=0.3
+            )
+            answer = response.choices[0].message.content
+            return answer if answer else ""
+        except Exception as e:
+            logging.warning(f"Error in API call: {e}")
+            return ""
+
+    def get_llm_response(self, user_input: str|None = None) -> str:
         """Fetches response from the LLM given an optional input and preceeding context.
 
         :param str|None user_input: optional prompt from the user

@@ -21,17 +21,25 @@ def main(session, details):
     Models one full session between the robot and a human, consisting of the following:
         1) pleasantries; the goal of which is to get the human comfortable
         2) a number of language learning games; the difficulty and number of games is personalized to each human
-        3) wrap-up, consisting of final encouragement and, depending on the age of the human, more/less in-depth reflection on progress.
+        3) wrap-up, consisting of final encouragement and goodbyes
     """
 
     # setup
     manager = SessionWrapper(session, "alex")
     yield manager.setup()
 
+    # TEST: uncomment once done testing the image game
     # conversational flow
-    num, rsn = yield pleasantries(manager)
-    logging.info(f"readiness estimate: {num}, {rsn}") 
-    yield run_games(manager)
+    # num, rsn = yield pleasantries(manager)
+    # logging.info(f"readiness estimate: {num}, {rsn}") 
+
+    manager.language_level = 4
+    manager.conversation_history = []
+
+    from games.describe_images import run as describe_game
+    yield describe_game(manager)
+    # yield run_games(manager)
+    manager.conversation_history = []
     yield wrapup(manager)
 
     yield manager.shut_down()

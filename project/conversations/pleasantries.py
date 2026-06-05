@@ -40,7 +40,7 @@ def pleasantries(s: SessionWrapper):
 
                 Do not use emojis. Start by saying somehting along the lines of "hello [name], how nice to see you again. Are you ready to play?"
                 """})
-    robot_speech = s.get_llm_response(None)
+    robot_speech = s.get_llm_response()
     logging.info(f"Robot speech: {robot_speech}")
     
     s.conversation_history.append({"role": "assistant", "content": robot_speech})
@@ -60,7 +60,7 @@ def pleasantries(s: SessionWrapper):
     s.conversation_history.append({"role": "developer", 
                 "content": f"""That's it for the pleasantries. Acknowledge the child's last response and tell them in a friendly, polite way that we're going to be moving on to the learning part of the session now-- by playing a few games! Express this sentiment in at most two sentences. """})
 
-    robot_speech = s.get_llm_response(None)
+    robot_speech = s.get_llm_response()
 
     if not settings.debug:
         yield s.say(robot_speech)

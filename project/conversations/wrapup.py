@@ -27,7 +27,7 @@ def wrapup(s: SessionWrapper):
                 3. This part of the conversation will last for 3 turns in total. Keep this in mind when planning your responses.
                 """})
 
-    robot_speech = s.get_llm_response(None)
+    robot_speech = s.get_llm_response()
     logging.info(f"Robot speech: {robot_speech}")
     
     s.conversation_history.append({"role": "assistant", "content": robot_speech})
@@ -47,7 +47,7 @@ def wrapup(s: SessionWrapper):
     s.conversation_history.append({"role": "developer", 
                 "content": f"""That's it for the conversation. Acknowledge the child's last response, then say goodbye!"""})
 
-    robot_speech = s.get_llm_response(None)
+    robot_speech = s.get_llm_response()
 
     if not settings.debug:
         s.say(robot_speech)
