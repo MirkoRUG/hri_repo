@@ -5,8 +5,8 @@ from openai import OpenAI
 # not the best way to do a config, but it works
 def init():
     logging.basicConfig(level=logging.INFO)
-    logging.getLogger("DeepFace").disabled = True
-    logging.getLogger("deepface").disabled = True
+    logging.getLogger("DeepFace").setLevel(logging.WARNING)
+    logging.getLogger("deepface").setLevel(logging.WARNING) # FIXME (low priority) does not seem to effect logging for deepface
 
     global debug
     global client 
