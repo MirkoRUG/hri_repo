@@ -1,4 +1,4 @@
-from syllapy import count as n_syllables
+from syllables import estimate as n_syllables
 
 
 class Body:
