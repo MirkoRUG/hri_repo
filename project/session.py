@@ -37,7 +37,7 @@ class SessionWrapper:
         self.human_name = name
         self.conversation_context = ""
         self._body = Body()
-        self.load_personalization_data(name)
+        self.load_personalization_data()
 
         self.client = settings.client
         self.model = settings.model

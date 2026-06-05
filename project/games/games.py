@@ -15,15 +15,15 @@ def run_games(s: SessionWrapper):
     if s.language_level == 1:
         yield s.say("level 1 let's go"
         )
-        # yield describe_game(s)
+        # yield describe)image_game(s)
 
     elif s.language_level == 2:
-        yield s.say("level 2 let's go")
+        # twenty questions game where the robot thinks of a word and the child says yes
         # yield questions_game(s)
+        pass
 
     elif s.language_level == 3:
-        yield s.say("level 3 let's go")
-        # yield description_game(s)
+        yield description_game(s)
 
     else:
         yield storytelling_game(s)
