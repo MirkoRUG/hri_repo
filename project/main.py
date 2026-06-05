@@ -1,5 +1,4 @@
 import os
-import logging
 import settings
 
 from autobahn.twisted.component import Component, run
@@ -28,20 +27,17 @@ def main(session, details):
     manager = SessionWrapper(session, "alex")
     yield manager.setup()
 
-    # TEST: uncomment once done testing the image game
     # conversational flow
-    # num, rsn = yield pleasantries(manager)
-    # logging.info(f"readiness estimate: {num}, {rsn}") 
+    num, rsn = yield pleasantries(manager)
+    logging.info(f"readiness estimate: {num}, {rsn}") 
 
-    manager.language_level = 4
     manager.conversation_history = []
+    yield run_games(manager)
 
-    from games.describe_images import run as describe_game
-    yield describe_game(manager)
-    # yield run_games(manager)
     manager.conversation_history = []
     yield wrapup(manager)
 
+    logging.warning("baab")
     yield manager.shut_down()
 
 wamp = Component(

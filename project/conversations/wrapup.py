@@ -24,7 +24,9 @@ def wrapup(s: SessionWrapper):
                 The goal of this conversation is to politely wrap up the interaction. To this end, do the following:
                 1. Ask the child if they liked playing together! Feel free to ask one or two follow-up questions depending on their answer.
                 2. Adjust your responses to the age of the child (use more in-depth sentences for older children and vice versa.)
-                3. This part of the conversation will last for 3 turns in total. Keep this in mind when planning your responses.
+                3. The child already had a lengthy interaction with the robot through a different llm. Do not greet them as if this is the start of the conversation.
+                4. IF THE USER PROMPT IS (near)-EMPTY: it's likely the speech-to-text failed; ask the user to clarify.
+                5. This part of the conversation will last for 3 turns in total. Keep this in mind when planning your responses.
                 """})
 
     robot_speech = s.get_llm_response()

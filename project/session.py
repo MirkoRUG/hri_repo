@@ -186,7 +186,7 @@ class SessionWrapper:
         cv2.imshow("Camera Stream", image)
         cv2.waitKey(1)
 
-    def get_custom_llm_response(self, context: List, input: str|None = None):
+    def get_custom_llm_response(self, context: List, user_input: str|None = None):
         """Fetches response from the LLM given an optional input and custom context.
 
         Useful for one-off prompts disconnected from the conversational flow.
@@ -196,11 +196,11 @@ class SessionWrapper:
         :return: generated llm response
         :rtype: str
         """
-        if input:
-            context.append({"role": "user", "content": input})
+        if user_input:
+            context.append({"role": "user", "content": user_input})
         try:
             response = self.client.chat.completions.create(
-                messages=self.conversation_history, model=self.model, temperature=0.3
+                messages=context, model=self.model, temperature=0.3
             )
             answer = response.choices[0].message.content
             return answer if answer else ""

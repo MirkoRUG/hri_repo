@@ -6,7 +6,8 @@ from openai import OpenAI
 def init():
     logging.basicConfig(level=logging.INFO)
     logging.getLogger("DeepFace").setLevel(logging.WARNING)
-    logging.getLogger("deepface").setLevel(logging.WARNING) # FIXME (low priority) does not seem to effect logging for deepface
+    logging.getLogger("deepface").setLevel(logging.WARNING) 
+    logging.getLogger("httpx").setLevel(logging.WARNING) 
 
     global debug
     global client
