@@ -1,5 +1,1 @@
-Child profile: 
-- Current language level: 4
-- Interests: Drawing, particularly animals like cows.
-- Recent activity: Drew a cow named MOMO with a big sun in the background, and the cow was walking around and eating grass.
-- Personality traits: Engaged and excited to share their creations.
+The human is named Alex, 12 years old, and likes to badminton and cycling. His favourite colour is yellow, and he was on holiday to France last month.
