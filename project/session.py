@@ -23,7 +23,6 @@ class SessionWrapper:
     model: str
     human_name: str
     human_context: str
-    context: str
     session: Session
     language_level: int = 1
     current_emotion: str | None
@@ -95,13 +94,13 @@ class SessionWrapper:
     def save_personalization_data(self):
         """Save the current child profile."""
         with open(f"data/{self.human_name}.md", "w") as f:
-            f.write(self.context)
+            f.write(self.human_context)
             
     def update_child_profile(self):
         """Update the child's profile using the latest conversation."""
 
         prompt = f"""
-        Current child profile: {self.context}
+        Current child profile: {self.human_context}
         Conversation history: {self.conversation_history}
 
         Update the profile with new information. 
@@ -128,7 +127,7 @@ class SessionWrapper:
             temperature=0
             )
 
-        self.context = response.choices[0].message.content or ""
+        self.human_context = response.choices[0].message.content or ""
 
     @inlineCallbacks
     def setup_STT(self):

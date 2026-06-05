@@ -5,6 +5,8 @@ from openai import OpenAI
 # not the best way to do a config, but it works
 def init():
     logging.basicConfig(level=logging.INFO)
+    logging.getLogger("DeepFace").disabled = True
+    logging.getLogger("deepface").disabled = True
 
     global debug
     global client
