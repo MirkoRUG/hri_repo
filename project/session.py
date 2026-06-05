@@ -178,7 +178,7 @@ class SessionWrapper:
                     self.current_emotion = dominant
                     logging.info(f"Detected emotion: {self.current_emotion} ({confidence:.1f}%)")
             except Exception as e:
-                logging.info(f"DeepFace: {e}")
+                logging.debug(f"DeepFace: {e}")
 
         if self.current_emotion:
             cv2.putText(image, self.current_emotion, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
