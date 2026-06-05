@@ -7,7 +7,7 @@ def wrapup(s: SessionWrapper):
     """Final part of the conversation between the robot and a child.
 
     Basically an outro;
-    the robot will reflect on the played games, and, depending on the age of the child, reflect on progress made.
+    the robot will reflect on the played games and say goodbye to the child.
     """
     if not settings.debug:
         yield s.session.call("rie.dialogue.stt.close")
@@ -38,7 +38,7 @@ def wrapup(s: SessionWrapper):
         logging.info(f"Robot speech: {robot_speech}")
 
     if not settings.debug:
-        yield s.session.call("rie.dialogue.say_animated", text=robot_speech)
+        yield s.say(robot_speech)
 
     human_answer = yield input("Enter human response: ") if settings.debug else s.listen()
     s.conversation_history.append({"role": "user", "content": human_answer})

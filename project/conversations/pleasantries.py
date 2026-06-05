@@ -51,7 +51,7 @@ def pleasantries(s: SessionWrapper):
         logging.info(f"Robot speech: {robot_speech}")
 
     if not settings.debug:
-        yield s.session.call("rie.dialogue.say_animated", text=robot_speech)
+        yield s.say(robot_speech)
 
     human_answer = yield input("Enter human response: ") if settings.debug else s.listen()
     s.conversation_history.append({"role": "user", "content": human_answer})
