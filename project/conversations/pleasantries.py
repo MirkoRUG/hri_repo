@@ -51,7 +51,7 @@ def pleasantries(s: SessionWrapper):
         logging.info(f"Robot speech: {robot_speech}")
 
     if not settings.debug:
-        yield s.session.call("rie.dialogue.say_animated", text=robot_speech)
+        yield s.say(robot_speech)
 
     human_answer = yield input("Enter human response: ") if settings.debug else s.listen()
     s.conversation_history.append({"role": "user", "content": human_answer})
@@ -63,7 +63,7 @@ def pleasantries(s: SessionWrapper):
     robot_speech = s.get_llm_response(None)
 
     if not settings.debug:
-        s.say(robot_speech)
+        yield s.say(robot_speech)
 
     s.conversation_history.append({"role": "developer",
         "content": "Now that we have talked to the user for a bit, tell me in a very compressed manner how the user is feeling. Respond by giving a number on a scale of 1-5 indicating how ready for learning you believe the user to be, followed by a short, single sentence which elaborates on the number. USE THIS FORMAT: [1-5]; <summary>."})
