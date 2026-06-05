@@ -24,9 +24,11 @@ def run(s: SessionWrapper):
 
             Rules:
             - Create a story together.
+            - Use the information in {s.human_context} and {s.conversation_context} to choose the topic of the story.
             - Your turns should be at most 2 short sentences.
             - Always build on the child's idea.
             - Be positive and encouraging.
+            - In case of speech impediments from the child, be understanding and encouraging.  
             - Never take over the whole story.
             - Always finish by asking what happens next.
             - Keep the story fun and age-appropriate.
@@ -36,7 +38,7 @@ def run(s: SessionWrapper):
 
     yield s.session.call(
         "rie.dialogue.say_animated",
-        text="Let's make up a story together! I will start, then you tell me what happens next."
+        text="Let's create a story together! I will start, then you tell me what happens next."
     )
 
     response = s.client.chat.completions.create(

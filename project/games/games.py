@@ -26,5 +26,8 @@ def run_games(s: SessionWrapper):
         # yield description_game(s)
 
     else:
-        yield s.say("level 4 let's go")
-        # yield storytelling_game(s)
+        yield s.session.call(
+            "rie.dialogue.say_animated",
+            text="level 4 let's go"
+        )
+        yield storytelling_game(s)

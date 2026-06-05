@@ -22,6 +22,7 @@ class SessionWrapper:
     model: str
     human_name: str
     human_context: str
+    conversation_context: str
     session: Session
     language_level: int = 1
     current_emotion: str | None
@@ -33,6 +34,7 @@ class SessionWrapper:
         self.current_emotion = None
         self._frame_counter = 0
         self.human_name = name
+        self.conversation_context = ""
         self.load_personalization_data()
 
         self.client = settings.client
@@ -91,8 +93,8 @@ class SessionWrapper:
         
     def save_personalization_data(self):
         """Save the current child profile."""
-        with open(f"data/{self.human_name}.md", "w") as f:
-            f.write(self.human_context)
+        with open(f"data/{self.human_name}-convo.md", "w") as f:
+            f.write(self.conversation_context)
             
     def update_child_profile(self):
         """Update the child's profile using the latest conversation."""
@@ -112,8 +114,8 @@ class SessionWrapper:
         family members, pets, personality traits or anything else useful
         for future conversations.
         - Include the current language level: {self.language_level}.
-
-        Output only the updated profile.
+        
+        Only include the information in the current conversation, not the previously known information. 
         """
 
         response = self.client.chat.completions.create(
@@ -125,7 +127,7 @@ class SessionWrapper:
             temperature=0
             )
 
-        self.human_context = response.choices[0].message.content or ""
+        self.conversation_context = response.choices[0].message.content or ""
 
     @inlineCallbacks
     def setup_STT(self):
