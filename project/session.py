@@ -35,7 +35,7 @@ class SessionWrapper:
         self._frame_counter = 0
         self._body = Body()
         self.human_name = name
-        self.load_personalization_data(name)
+        self.load_personalization_data()
 
         self.client = settings.client
         self.model = settings.model
