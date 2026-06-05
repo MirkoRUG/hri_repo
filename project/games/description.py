@@ -77,8 +77,6 @@ Now play the game:
         if clue_num == 0:
             # Combine intro + first clue into a single say call to avoid any overlap
             intro = f"Let's play a guessing game! I will describe a word, and you try to guess what it is. Here is your first clue: {clue}"
-        else:
-            intro = f"Here is another clue. {clue}"
 
         human_guess = yield s.say_and_listen(intro) if not settings.debug else input(f"[clue {clue_num+1}: {clue}].")
 

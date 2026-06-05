@@ -41,7 +41,7 @@ wamp = Component(
         {
             "url": "wss://wamp.robotsindeklas.nl",
             "serializers": ["msgpack"],
-            "max_retries": 0,
+            "max_retries": -1,
         }
     ],
     realm=realm,

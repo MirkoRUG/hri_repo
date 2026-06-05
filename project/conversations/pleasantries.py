@@ -45,7 +45,7 @@ def pleasantries(s: SessionWrapper):
     
     s.conversation_history.append({"role": "assistant", "content": robot_speech})
 
-    for _ in range(5):
+    for _ in range(2):
         human_answer = yield input("Enter human response: ") if settings.debug else s.say_and_listen(robot_speech)
         robot_speech = s.get_llm_response(human_answer)
         logging.info(f"Robot speech: {robot_speech}")

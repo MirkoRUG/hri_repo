@@ -45,7 +45,7 @@ class SessionWrapper:
         if not settings.debug:
             yield self.session.call("rom.optional.behavior.play", name="BlocklySafeStand")
             yield self.setup_STT()
-            yield self.setup_vision()
+            # yield self.setup_vision()     #TODO activate vision
 
     @inlineCallbacks
     def shut_down(self):
@@ -61,7 +61,7 @@ class SessionWrapper:
         """
         with open(f"data/{self.human_name}.md", "r") as f:
             self.human_context = f.read()
-            
+
     def count_child_words(self) -> int:
         """Count all words spoken by the child so far."""
 
@@ -72,12 +72,12 @@ class SessionWrapper:
                 total += len(message["content"].split())
 
         return total
-    
+
     def determine_language_level(self):
         """Calculate the child's level based on the word count in the initial conversation."""
         words = self.count_child_words()
 
-        if words < 5: 
+        if words < 5:
             self.language_level = 1
         elif words < 15:
             self.language_level = 2
@@ -90,12 +90,12 @@ class SessionWrapper:
             f"Child spoke {words} words. "
             f"Assigned level {self.language_level}"
         )
-        
+
     def save_personalization_data(self):
         """Save the current child profile."""
         with open(f"data/{self.human_name}.md", "w") as f:
             f.write(self.human_context)
-            
+
     def update_child_profile(self):
         """Update the child's profile using the latest conversation."""
 
@@ -177,7 +177,7 @@ class SessionWrapper:
                 if confidence >= threshold:
                     self.current_emotion = dominant
                     logging.info(f"Detected emotion: {self.current_emotion} ({confidence:.1f}%)")
-            except Exception as e:
+            except Exception:
                 # logging.debug(f"DeepFace: {e}")
                 pass
 
@@ -264,11 +264,11 @@ class SessionWrapper:
             frames = self._body.yes_movement()
             perform_movement(self.session, frames=frames, force=True)
             yield self.session.call("rie.dialogue.say", text=text)
-        elif any(w in s for w in ["no", "wrong", "incorrect"]):
+        elif any(w in s for w in ["no ", "wrong", "incorrect"]):
             frames = self._body.no_movement()
             perform_movement(self.session, frames=frames, force=True)
             yield self.session.call("rie.dialogue.say", text=text)
-        elif any(w in s for w in ["hello", "hi", "hey", "goodbye", "bye", "see you", "farewell"]):
+        elif any(w in s for w in ["hello", "hey", "goodbye", "bye", "see you", "farewell", "hi!", "hi,", "hi!", "hi "]):
             self.session.call("rom.optional.behavior.play", name="BlocklyWaveRightArm")
             yield self.session.call("rie.dialogue.say", text=text)
         else:
