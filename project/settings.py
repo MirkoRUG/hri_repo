@@ -1,6 +1,7 @@
 import logging
 import os
 from openai import OpenAI
+import platform
 
 # not the best way to do a config, but it works
 def init():
@@ -12,6 +13,8 @@ def init():
     global debug
     global client
     global model
+    global os
     debug = os.environ.get('DEBUG', 'False').lower() == 'true'
     client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
     model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+    os = platform.system()
