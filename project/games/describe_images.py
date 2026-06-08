@@ -4,6 +4,7 @@ import logging
 from twisted.internet.defer import inlineCallbacks
 import subprocess
 import signal
+from PIL import Image
 
 
 # map language level to the image file + metadata
@@ -26,12 +27,18 @@ def single_round(s: SessionWrapper, image: str, subjects: str, num_subjects: int
     num_turns: int = 0
     human_answer: str = ""
 
-    # Not how i'd like to do this in an ideal scenario (that would be PIL.Image.open()), but this is the one way i've found that 
+    # if-elif for non-linux distributions cause Linux is my specialest little operating system
+    # Not how i'd like to do this in an ideal scenario (that would be PIL.Image.open()), but this is the one way on linux i've found that 
     # 1) does not have feh capture stdin input
     # 2) listens to SIGTERM
-    process = subprocess.Popen(["feh", "-f-"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    process.stdin.write(image)
-    process.stdin.close()
+    if settings.os == "Linux":
+        process = subprocess.Popen(["feh", "-f-"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        process.stdin.write(image)
+        process.stdin.close()
+    else:
+        img = Image.open(image)
+        img.show()
+
 
     subject_id_context = [{"role": "developer", "content": f"""You are being used to classify whether the user correctly identified ONE OR more subjects in an image.
                             For each prompt, do the following:
@@ -80,10 +87,11 @@ def single_round(s: SessionWrapper, image: str, subjects: str, num_subjects: int
     if not settings.debug:
         yield s.say(robot_speech)
 
-    process.send_signal(signal.SIGTERM)
-    process.wait()
-    
-    #FIXME (medium priority): errors on inlineCallback; dunno why 
+    if settings.os == "Linux":
+        process.send_signal(signal.SIGTERM)
+        process.wait()
+    else:
+        img.close()
 
 
 @inlineCallbacks

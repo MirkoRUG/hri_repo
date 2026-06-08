@@ -1,5 +1,6 @@
 import logging
 import os
+import platform
 
 from openai import OpenAI
 
@@ -14,6 +15,8 @@ def init():
     global debug
     global client
     global model
+    global os
     debug = os.environ.get("DEBUG", "False").strip().lower() == "true"
     client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
     model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+    os = platform.system()
