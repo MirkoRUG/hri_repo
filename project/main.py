@@ -1,5 +1,4 @@
 import os
-import logging
 import settings
 
 from autobahn.twisted.component import Component, run
@@ -21,7 +20,7 @@ def main(session, details):
     Models one full session between the robot and a human, consisting of the following:
         1) pleasantries; the goal of which is to get the human comfortable
         2) a number of language learning games; the difficulty and number of games is personalized to each human
-        3) wrap-up, consisting of final encouragement and, depending on the age of the human, more/less in-depth reflection on progress.
+        3) wrap-up, consisting of final encouragement and goodbyes
     """
 
     # setup
@@ -31,9 +30,14 @@ def main(session, details):
     # conversational flow
     num, rsn = yield pleasantries(manager)
     logging.info(f"readiness estimate: {num}, {rsn}") 
+
+    manager.conversation_history = []
     yield run_games(manager)
+
+    manager.conversation_history = []
     yield wrapup(manager)
 
+    logging.warning("baab")
     yield manager.shut_down()
 
 wamp = Component(

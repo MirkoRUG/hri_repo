@@ -9,13 +9,8 @@ from .storytelling import run as storytelling_game
 
 @inlineCallbacks
 def run_games(s: SessionWrapper):
-    # yield s.session.call(     #TODO remove this?
-    #     "rie.dialogue.say_animated",
-    #     text="Great! Now let's play a language game together."
-    # )
-
     # 1 is the hardest, 4 is the easiest
-    s.language_level = 3
+    yield s.say("Great! Now let's play a language game together.")
 
     if s.language_level == 1:
         yield s.say("level 1 let's go"
@@ -28,6 +23,7 @@ def run_games(s: SessionWrapper):
         pass
 
     elif s.language_level == 3:
+        yield s.say("level 3 let's go")
         yield description_game(s)
 
     else:
