@@ -262,16 +262,21 @@ class SessionWrapper:
         return human_response
 
     @inlineCallbacks
-    def say(self, text: str):
+    def say(self, text: str, say_animated: bool = False):
         """Make the robot say a string.
 
         Turns off the robot's microphone while speaking to avoid self-hearing.
         Picks a set of movements based on trigger words; falls back to say_animated.
 
         :param text: string to say
+        :param say_animated: an overwrite to make sure the robot uses say_animated
         """
         # don't listen
         self.audio_processor.do_speech = False
+
+        if say_animated:
+            self.session.call("rie.dialogue.say_animated", text=text)
+            return
 
         s = text.lower()
         # Select movement to go along with sentence

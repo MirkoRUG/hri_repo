@@ -10,21 +10,18 @@ from .storytelling import run as storytelling_game
 @inlineCallbacks
 def run_games(s: SessionWrapper):
     # 1 is the hardest, 4 is the easiest
-    yield s.say("Great! Now let's play a language game together.")
+    # yield s.say("Great! Now let's play a language game together.")
+    s.language_level = 3
 
     if s.language_level == 1:
-        yield s.say("level 1 let's go"
-        )
+        yield s.say("level 1 let's go")
         # yield describe)image_game(s)
 
     elif s.language_level == 2:
-        yield s.say("level 2 let's go")
-        # yield questions_game(s)
-        pass
+        yield description_game(s)
 
     elif s.language_level == 3:
-        yield s.say("level 3 let's go")
-        yield description_game(s)
+        yield questions_game(s)
 
     else:
         yield s.say("level 4 let's go")

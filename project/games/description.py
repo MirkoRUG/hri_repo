@@ -33,7 +33,7 @@ Interaction guidelines:
         }
     ]
 
-    # 1. ave the LLM pick a word
+    # 1. Have the LLM pick a word
     response = s.client.chat.completions.create(
         messages=game_history, model=s.model, temperature=0.9
     )
