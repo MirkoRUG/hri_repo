@@ -66,7 +66,7 @@ def pleasantries(s: SessionWrapper):
         yield s.say(robot_speech)
 
     s.conversation_history.append({"role": "developer",
-        "content": "Now that we have talked to the user for a bit, tell me in a very compressed manner how the user is feeling. Respond by giving a number on a scale of 1-5 indicating how ready for learning you believe the user to be, followed by a short, single sentence which elaborates on the number. USE THIS FORMAT: [1-5]; <summary>."})
+        "content": "Now that we have talked to the user for a bit, tell me in a very compressed manner how the user is feeling. Respond by giving a number on a scale of 1-5 indicating how enthuasiastic (for learning) you believe the user to be, followed by a short, single sentence which elaborates on the number. USE THIS FORMAT: [1-5]; <summary>."})
     response = s.client.chat.completions.create(
         messages=s.conversation_history, model=s.model, temperature=0.3
     )
@@ -84,8 +84,8 @@ def pleasantries(s: SessionWrapper):
 
     try: 
         num, rsn = answer.split(';')
-        return (int(num), rsn)
+        s.enthousiasm = int(num)
+        logging.info(f"readiness estimate: {num}, {rsn}") 
     except:
         logging.warning("LLM returned unparsable response while returning from pleasantries")
         logging.debug(f"answer: {answer}")
-        return (-1, "")

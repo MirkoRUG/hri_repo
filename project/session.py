@@ -26,6 +26,7 @@ class SessionWrapper:
     conversation_context: str
     session: Session
     language_level: int = 1
+    enthousiasm: int = 2
     current_emotion: str | None
     _frame_counter: int
 

@@ -1,6 +1,1 @@
-- Name: Alex
-- Age: 12 years old
-- Interests: Badminton, cycling
-- Recent activities: Went on holiday to France last month
-- Current language level: 3
-- Personality traits: Seems a bit distracted but open to learning and playing games.
+Alex, 12 years old, likes badminton and cycling. His favourite colour is yellow. He was on holiday to France last month. Alex seems a bit hesitant but is open to moving on to games. Current language level: 1.

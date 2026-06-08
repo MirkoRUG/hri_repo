@@ -53,5 +53,6 @@ def wrapup(s: SessionWrapper):
 
     if not settings.debug:
         s.say(robot_speech)
+        logging.info(f"Robot speech: {robot_speech}")
         yield s.session.call("rom.optional.behavior.play", name="BlocklyCrouch")
         s.session.leave()

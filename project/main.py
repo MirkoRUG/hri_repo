@@ -28,16 +28,17 @@ def main(session, details):
     yield manager.setup()
 
     # conversational flow
-    num, rsn = yield pleasantries(manager)
-    logging.info(f"readiness estimate: {num}, {rsn}") 
+    # yield pleasantries(manager)
 
+    manager.enthousiasm = 2
     manager.conversation_history = []
     yield run_games(manager)
 
+    logging.warning("games done")
     manager.conversation_history = []
     yield wrapup(manager)
+    logging.warning("wrapup done")
 
-    logging.warning("baab")
     yield manager.shut_down()
 
 wamp = Component(

@@ -1,5 +1,7 @@
 from session import SessionWrapper
 from twisted.internet.defer import inlineCallbacks
+import settings
+import logging
 
 # probably change
 from .twenty_questions import run as questions_game
@@ -9,7 +11,8 @@ from .storytelling import run as storytelling_game
 
 @inlineCallbacks
 def run_games(s: SessionWrapper):
-    yield s.say("Great! Now let's play a language game together.")
+    yield image_game(s)
+    return
 
     if s.language_level == 1:
         yield image_game(s)

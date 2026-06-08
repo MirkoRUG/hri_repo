@@ -28,10 +28,10 @@ def single_round(s: SessionWrapper, image: str, subjects: str, num_subjects: int
     human_answer: str = ""
 
     # if-elif for non-linux distributions cause Linux is my specialest little operating system
-    # Not how i'd like to do this in an ideal scenario (that would be PIL.Image.open()), but this is the one way on linux i've found that 
-    # 1) does not have feh capture stdin input
-    # 2) listens to SIGTERM
     if settings.os == "Linux":
+        # Not how i'd like to do this in an ideal scenario (that would be PIL.Image.open()), but this is the one way on linux i've found that 
+        # 1) does not have feh capture stdin input
+        # 2) listens to SIGTERM
         process = subprocess.Popen(["feh", "-f-"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         process.stdin.write(image)
         process.stdin.close()
@@ -120,19 +120,19 @@ def run(s: SessionWrapper):
     # introduce the game
     s.conversation_history.append({"role": "developer", "content": f"""
                                    First introduce the game to the child; explain in a few short sentences that we will be playing an image guessing game,
-                                   and include that we'll be playing {s.language_level} rounds.
+                                   and include that we'll be playing {s.enthousiasm} rounds.
                                    """})
     robot_speech = s.get_llm_response()
     logging.info(f"Robot speech: {robot_speech}")
 
     if not settings.debug:
-        s.say(robot_speech)
+        yield s.say(robot_speech)
 
-    for i in range(0, s.language_level):
+    for i in range(0, s.enthousiasm):
         s.conversation_history = []
         s.conversation_history.append(prompt)
         img_file, img_description, num_subjects = key[i]
-        single_round(s, "assets/"+img_file, img_description, num_subjects)
+        yield single_round(s, "assets/"+img_file, img_description, num_subjects)
 
     # Respond to the last answer so the conversation doesn't end abruptly.
     s.conversation_history.append({"role": "developer", 
@@ -142,4 +142,4 @@ def run(s: SessionWrapper):
     logging.info(f"Robot speech: {robot_speech}")
 
     if not settings.debug:
-        s.say(robot_speech)
+        yield s.say(robot_speech)
