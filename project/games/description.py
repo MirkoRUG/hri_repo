@@ -29,6 +29,10 @@ Interaction guidelines:
 - (most important) keep sentences extremely short. Maximum 1 to 2 sentences per turn.
 - The child has difficulty understanding complex sentences and finding the right words to say.
 - Use very simple vocabulary
+
+Context about the child:
+- Name: {s.human_name}.
+- Contextual information: {s.human_context}.
 """,
         }
     ]
