@@ -23,6 +23,7 @@ class SessionWrapper:
     model: str
     human_name: str
     human_context: str
+    conversation_context: str
     session: Session
     language_level: int = 1
     current_emotion: str | None
@@ -35,6 +36,8 @@ class SessionWrapper:
         self._frame_counter = 0
         self._body = Body()
         self.human_name = name
+        self.conversation_context = ""
+        self._body = Body()
         self.load_personalization_data()
 
         self.client = settings.client
@@ -94,8 +97,8 @@ class SessionWrapper:
 
     def save_personalization_data(self):
         """Save the current child profile."""
-        with open(f"data/{self.human_name}.md", "w") as f:
-            f.write(self.human_context)
+        with open(f"data/{self.human_name}-convo.md", "w") as f:
+            f.write(self.conversation_context)
 
     def update_child_profile(self):
         """Update the child's profile using the latest conversation."""
@@ -115,8 +118,8 @@ class SessionWrapper:
         family members, pets, personality traits or anything else useful
         for future conversations.
         - Include the current language level: {self.language_level}.
-
-        Output only the updated profile.
+        
+        Only include the information in the current conversation, not the previously known information. 
         """
 
         response = self.client.chat.completions.create(
@@ -128,7 +131,7 @@ class SessionWrapper:
             temperature=0
             )
 
-        self.human_context = response.choices[0].message.content or ""
+        self.conversation_context = response.choices[0].message.content or ""
 
     @inlineCallbacks
     def setup_STT(self):
@@ -178,9 +181,8 @@ class SessionWrapper:
                 if confidence >= threshold:
                     self.current_emotion = dominant
                     logging.info(f"Detected emotion: {self.current_emotion} ({confidence:.1f}%)")
-            except Exception:
-                # logging.debug(f"DeepFace: {e}")
-                pass
+            except Exception as e:
+                logging.debug(f"DeepFace: {e}")
 
         if self.current_emotion:
             cv2.putText(image, self.current_emotion, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
