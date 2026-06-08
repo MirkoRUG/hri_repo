@@ -286,7 +286,7 @@ class SessionWrapper:
             frames = self._body.victory_movement(s)
             perform_movement(self.session, frames=frames, force=True)
             yield self.session.call("rie.dialogue.say", text=text)
-        elif any(w in s for w in ["eat", "food", "fruit", "drink", "beverage"]):
+        elif any(w in s for w in ["food", "fruit", "drink", "beverage", " eat"]):
             frames = self._body.eating_movement(s)
             perform_movement(self.session, frames=frames, force=True)
             yield self.session.call("rie.dialogue.say", text=text)
