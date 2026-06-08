@@ -11,8 +11,6 @@ from .storytelling import run as storytelling_game
 
 @inlineCallbacks
 def run_games(s: SessionWrapper):
-    yield image_game(s)
-    return
 
     if s.language_level == 1:
         yield image_game(s)

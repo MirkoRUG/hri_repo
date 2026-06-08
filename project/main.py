@@ -28,9 +28,8 @@ def main(session, details):
     yield manager.setup()
 
     # conversational flow
-    # yield pleasantries(manager)
+    yield pleasantries(manager)
 
-    manager.enthousiasm = 2
     manager.conversation_history = []
     yield run_games(manager)
 
