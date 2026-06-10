@@ -9,7 +9,7 @@ from PIL import Image
 
 # map language level to the image file + metadata
 key = {
- 0: ('cattle_abduction.jpg', "The image contains a green ufo seen abducting a cow. There are 3 small sprigs visible as well.", 3),
+ 0: ('cattle_abduction.jpg', "The image contains a green ufo/alien abducting a cow. There are 3 small sprigs/grass/plants visible.", 3),
  1: ('zoo.jpg', "The image contains a banner reading 'zoo'; in front of the banner are an elephant, giraffe, panda, and hippo.", 4),
  2: ('construction_site.jpg', "The image depicts a construction site. Visible are 3 pylons, an excavator, and a road roller. A skyline including a crane and skyscrapers is visible in the background. ", 4),
  3: ('ecosystem.jpg', "The iage depicts a wetland ecosystem. In the pictre are a dragonfly, a beaver, a brown bear, a moose, a frog, a duck, a fox, 2 birds, a fish, and an amphibian. There are some reeds, lily pads, and birch and pine trees in the background. ", 11)
@@ -46,6 +46,7 @@ def single_round(s: SessionWrapper, image: str, subjects: str, num_subjects: int
                             IF the user does not describe or match ANY of these components: "{subjects}", RESPOND WITH '0; <reasoning>'.
                             PARTIAL MATCHES (the user identifying only one part of the image) ARE ACCEPTABLE AND SHOULD RETURN a'1'!!!
                             MAKE SURE TO LOOK FOR **SEMANTIC** MATCHES, not synctactic ones. 
+                            If the user says something slightly nonsensical that may resonable be extrapolated as indicating any of the subjects, accept this is a a valid match. Example: the user says 'ali', which could mean 'alien' and should thus match if 'alien' is in the subjects.
                             """}]
     s.conversation_history.append({"role": "developer", "content": f"""
                                    The next image contains the following subjects: {subjects}. 

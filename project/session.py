@@ -82,7 +82,7 @@ class SessionWrapper:
         """Calculate the child's level based on the word count in the initial conversation."""
         words = self.count_child_words()
 
-        if words < 5:
+        if words < 10:
             self.language_level = 1
         elif words < 15:
             self.language_level = 2

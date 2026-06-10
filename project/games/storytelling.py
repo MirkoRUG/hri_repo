@@ -87,18 +87,15 @@ def run(s: SessionWrapper):
             temperature=0.7
         )
         
-        robot_speech = s.get_llm_response(child_response)
+        robot_speech = s.get_custom_llm_response(story_history, child_response)
         logging.info(f"Robot speech: {robot_speech}")
 
-    yield s.session.call(
-        "rie.dialogue.say_animated",
-        text="That was a great story! Thank you for playing this game with me! Let's hear a short summary."
-    )
+    yield s.say("That was a great story! Thank you for playing this game with me! Let's hear a short summary.")
 
     summary_response = s.client.chat.completions.create(
         messages=story_history + [
             {
-                "role": "user",
+                "role": "developer",
                 "content": "Summarize the completed story in exactly 3 short sentences."
             }
         ],
@@ -108,7 +105,4 @@ def run(s: SessionWrapper):
 
     summary = summary_response.choices[0].message.content or ""
 
-    yield s.session.call(
-        "rie.dialogue.say_animated",
-        text=summary
-    )
+    yield s.say(summary)

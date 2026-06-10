@@ -7,7 +7,7 @@ from twisted.internet.defer import inlineCallbacks
 
 from conversations import *
 from session import SessionWrapper
-from games.games import run_games
+from games import *
 
 
 load_dotenv()
