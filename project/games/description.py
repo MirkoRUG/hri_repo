@@ -80,9 +80,9 @@ Now play the game:
     for clue_num in range(MAX_CLUES):
         if clue_num == 0:
             # Combine intro + first clue into a single say call to avoid any overlap
-            intro = f"Let's play a guessing game! I will describe a word, and you try to guess what it is. Here is your first clue: {clue}"
+            robot_speech = f"Let's play a guessing game! I will describe a word, and you try to guess what it is. Here is your first clue: {clue}"
 
-        human_guess = yield s.say_and_listen(intro) if not settings.debug else input(f"[clue {clue_num+1}: {clue}].")
+        human_guess = yield s.say_and_listen(robot_speech) if not settings.debug else input(f"[clue {clue_num+1}: {clue}].")
 
         logging.info(f"Child guessed: {human_guess}")
         game_history.append({"role": "user", "content": human_guess})
@@ -90,17 +90,17 @@ Now play the game:
         response = s.client.chat.completions.create(
             messages=game_history, model=s.model, temperature=0.3
         )
-        robot_reply = (response.choices[0].message.content or "")
-        game_history.append({"role": "assistant", "content": robot_reply})
+        robot_speech = (response.choices[0].message.content or "")
+        game_history.append({"role": "assistant", "content": robot_speech})
 
-        if "correct" in robot_reply.lower():
-            celebration = robot_reply[len("CORRECT:"):].strip()
+        if "correct" in robot_speech.lower():
+            celebration = robot_speech[len("CORRECT:"):].strip()
             yield s.say(celebration) if not settings.debug else print(f"[robot] {celebration}")
             logging.info(f"Child guessed correctly: {target_word}")
             return
 
         # Wrong guess
-        clue = robot_reply
+        clue_num += 1
 
     # Ran out of clues
     reveal = f"The word was {target_word}! Good try, maybe next time you'll get it!"

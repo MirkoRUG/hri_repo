@@ -13,13 +13,13 @@ from .storytelling import run as storytelling_game
 def run_games(s: SessionWrapper):
 
     if s.language_level == 1:
-        yield image_game(s)
-
-    elif s.language_level == 2:
         yield questions_game(s)
 
-    elif s.language_level == 3:
+    elif s.language_level == 2:
         yield description_game(s)
+
+    elif s.language_level == 3:
+        yield image_game(s)
 
     else:
         yield storytelling_game(s)

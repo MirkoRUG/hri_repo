@@ -50,7 +50,7 @@ class Body:
         """Generate the frames for a victory movement"""
         frames = []
         # search for idx of the iconic word
-        iconic_words = ["win", "victory", "congratulations"]
+        iconic_words = ["victory", "congratulations", "win ", "win.", "win!" ]
         for word in iconic_words:
             pos = sentence.find(word)
             if pos != -1:
