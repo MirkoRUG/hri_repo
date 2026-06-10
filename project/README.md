@@ -5,7 +5,7 @@ This project is a demo of a social robot designed to personalize language learni
 ## Key files
 
 - `main.py` - session driver that runs pleasantries, games and wrap-up.
-- `session.py` - manages personalization, conversation history, child profile and robot setup.
+- `session.py` - manages personalization, conversation history, child profile, emotion recognition and robot setup.
 - `conversations/pleasantries.py` - opening social conversation that gathers context and readiness.
 - `conversations/wrapup.py` - final interaction to close the session positively.
 - `games/games.py` - chooses the game based on estimated language level.
@@ -112,8 +112,8 @@ The demo will:
 - The robot uses that context to ask more familiar, accessible questions during the opening interaction.
 - The system counts the child’s words and assigns a language level.
 - A game is selected based on that level:
-  - Level 1 - image description
-  - Level 2 - twenty questions
-  - Level 3 - description guessing
-  - Level 4+ - storytelling
+  - Level 1 - twenty questions
+  - Level 2 - word guessing / description 
+  - Level 3 - image description
+  - Level 4 - storytelling
 - After the session, the robot generates an updated profile from the latest conversation and saves it to `data/<name>-convo.md`.
