@@ -283,7 +283,7 @@ Only include the information in the current conversation, not the previously kno
 
         s = text.lower()
         # Select movement to go along with sentence
-        if any(w in s for w in ["win", "victory", "congratulations"]):
+        if any(w in s for w in ["victory", "congratulations", "win ", "win.", "win!"]):
             frames = self._body.victory_movement(s)
             perform_movement(self.session, frames=frames, force=True)
             yield self.session.call("rie.dialogue.say", text=text)
