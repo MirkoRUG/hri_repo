@@ -49,7 +49,7 @@ class SessionWrapper:
         if not settings.debug:
             yield self.session.call("rom.optional.behavior.play", name="BlocklySafeStand")
             yield self.setup_STT()
-            # yield self.setup_vision()     #TODO activate vision
+            # yield self.setup_vision()
 
     @inlineCallbacks
     def shut_down(self):
@@ -105,23 +105,23 @@ class SessionWrapper:
         """Update the child's profile using the latest conversation."""
 
         prompt = f"""
-        Current child profile: {self.human_context}
-        Conversation history: {self.conversation_history}
+Current child profile: {self.human_context}
+Conversation history: {self.conversation_history}
 
-        Update the profile with new information. 
-        
-        Rules:
-        - Keep previously known information.
-        - Add new information learned from the conversation.
-        - Remove duplicated information.
-        - Keep the profile concise.
-        - Mention interests, hobbies, favourite things, recent activities,
-        family members, pets, personality traits or anything else useful
-        for future conversations.
-        - Include the current language level: {self.language_level}.
-        
-        Only include the information in the current conversation, not the previously known information. 
-        """
+Update the profile with new information. 
+
+Rules:
+- Keep previously known information.
+- Add new information learned from the conversation.
+- Remove duplicated information.
+- Keep the profile concise.
+- Mention interests, hobbies, favourite things, recent activities,
+family members, pets, personality traits or anything else useful
+for future conversations.
+- Include the current language level: {self.language_level}.
+
+Only include the information in the current conversation, not the previously known information. 
+"""
 
         response = self.client.chat.completions.create(
             messages=[{
